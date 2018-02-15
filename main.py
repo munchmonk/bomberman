@@ -1,5 +1,9 @@
 import pygame
+import time
+import aux
 
+
+TILESIZE = 40
 WIDTH = 800
 HEIGHT = 600
 UP = 'up'
@@ -11,104 +15,83 @@ CONTROLS = {0: {UP: pygame.K_w,  RIGHT: pygame.K_d,     LEFT: pygame.K_a,    DOW
             1: {UP: pygame.K_UP, RIGHT: pygame.K_RIGHT, LEFT: pygame.K_LEFT, DOWN: pygame.K_DOWN, BOMB: pygame.K_m}}
 
 
-class Tile(pygame.sprite.Sprite):
-    SIZE = 40
-    IMG = pygame.image.load("tile.png")
-
-    def __init__(self, x, y, *groups):
-        super(Tile, self).__init__(*groups)
-        self.image = Tile.IMG
-        self.rect = self.image.get_rect(topleft=(x, y))
-
-    def update(self, dt):
-        pass
-
-
-class Bomb(pygame.sprite.Sprite):
-    SIZE = 40
-    IMG = pygame.image.load("bomb.png")
-
-    def __init__(self, x, y, *groups):
-        super(Bomb, self).__init__(*groups)
-        self.image = Bomb.IMG
-        self.rect = self.image.get_rect(topleft=(x, y))
-
-    def update(self, dt):
-        pass
-
-
 class Player(pygame.sprite.Sprite):
     IMG = [pygame.image.load("player1.png"), pygame.image.load("player2.png")]
+    BOMB_COOLDOWN = 0.4
+    BOMB_RANGE = [2, 3]
 
     def __init__(self, x, y, side, *groups):
         super(Player, self).__init__(*groups)
         self.side = side
         self.image = Player.IMG[self.side]
         self.rect = self.image.get_rect(topleft=(x, y))
-        self.speed = 0.1
+        self.speed = 0.3
         self.moving = (0, 0)
         self.to_next_tile = 0
+        self.lastbomb = 0
+        self.bomb_range = Player.BOMB_RANGE[self.side]
 
     def update(self, tiles, bombs, dt):
         key = pygame.key.get_pressed()
 
         # Place bombs
-        if key[CONTROLS[self.side][BOMB]]:
-            bomb_x = self.rect.left - (Tile.SIZE - self.to_next_tile) * self.moving[0]
-            bomb_y = self.rect.top - (Tile.SIZE - self.to_next_tile) * self.moving[1]
-            bombs.add(Bomb(bomb_x, bomb_y))
+        if key[CONTROLS[self.side][BOMB]] and time.time() - self.lastbomb >= Player.BOMB_COOLDOWN:
+            bomb_x = self.rect.left - (TILESIZE - self.to_next_tile) * self.moving[0]
+            bomb_y = self.rect.top - (TILESIZE - self.to_next_tile) * self.moving[1]
+            bombs.add(aux.Bomb(bomb_x, bomb_y, self.bomb_range))
+            self.lastbomb = time.time()
 
         # Movement input
         if self.moving == (0, 0):
             legalmove = True
             if key[CONTROLS[self.side][LEFT]]:
                 for tile in tiles:
-                    if tile.rect.left == self.rect.left - Tile.SIZE and tile.rect.top == self.rect.top:
+                    if tile.rect.left == self.rect.left - TILESIZE and tile.rect.top == self.rect.top:
                         legalmove = False
                         break
                 for bomb in bombs:
-                    if bomb.rect.left == self.rect.left - Tile.SIZE and bomb.rect.top == self.rect.top:
+                    if bomb.rect.left == self.rect.left - TILESIZE and bomb.rect.top == self.rect.top:
                         legalmove = False
                         break
                 if self.rect.left > 0 and legalmove:
                     self.moving = (-1, 0)
-                    self.to_next_tile = Tile.SIZE
+                    self.to_next_tile = TILESIZE
             if key[CONTROLS[self.side][UP]]:
                 for tile in tiles:
-                    if tile.rect.top == self.rect.top - Tile.SIZE and tile.rect.left == self.rect.left:
+                    if tile.rect.top == self.rect.top - TILESIZE and tile.rect.left == self.rect.left:
                         legalmove = False
                         break
                 for bomb in bombs:
-                    if bomb.rect.top == self.rect.top - Tile.SIZE and bomb.rect.left == self.rect.left:
+                    if bomb.rect.top == self.rect.top - TILESIZE and bomb.rect.left == self.rect.left:
                         legalmove = False
                         break
                 if self.rect.top > 0 and legalmove:
                     self.moving = (0, -1)
-                    self.to_next_tile = Tile.SIZE
+                    self.to_next_tile = TILESIZE
             if key[CONTROLS[self.side][RIGHT]]:
                 for tile in tiles:
-                    if tile.rect.right == self.rect.right + Tile.SIZE and tile.rect.top == self.rect.top:
+                    if tile.rect.right == self.rect.right + TILESIZE and tile.rect.top == self.rect.top:
                         legalmove = False
                         break
                 for bomb in bombs:
-                    if bomb.rect.right == self.rect.right + Tile.SIZE and bomb.rect.top == self.rect.top:
+                    if bomb.rect.right == self.rect.right + TILESIZE and bomb.rect.top == self.rect.top:
                         legalmove = False
                         break
                 if self.rect.right < WIDTH and legalmove:
                     self.moving = (1, 0)
-                    self.to_next_tile = Tile.SIZE
+                    self.to_next_tile = TILESIZE
             if key[CONTROLS[self.side][DOWN]]:
                 for tile in tiles:
-                    if tile.rect.bottom == self.rect.bottom + Tile.SIZE and tile.rect.left == self.rect.left:
+                    if tile.rect.bottom == self.rect.bottom + TILESIZE and tile.rect.left == self.rect.left:
                         legalmove = False
                         break
                 for bomb in bombs:
-                    if bomb.rect.bottom == self.rect.bottom + Tile.SIZE and bomb.rect.left == self.rect.left:
+                    if bomb.rect.bottom == self.rect.bottom + TILESIZE and bomb.rect.left == self.rect.left:
                         legalmove = False
                         break
                 if self.rect.bottom < HEIGHT and legalmove:
                     self.moving = (0, 1)
-                    self.to_next_tile = Tile.SIZE
+                    self.to_next_tile = TILESIZE
 
         # Actual movement
         if self.moving != (0, 0):
@@ -139,18 +122,19 @@ class Game:
         self.alltiles = pygame.sprite.Group()
         self.allplayers = pygame.sprite.Group()
         self.allbombs = pygame.sprite.Group()
+        self.allexplosions = pygame.sprite.Group()
 
     def setup(self):
-        self.allplayers.add(Player(Tile.SIZE * 2, Tile.SIZE * 2, 0))
-        self.allplayers.add(Player(Tile.SIZE * 4, Tile.SIZE * 5, 1))
+        self.allplayers.add(Player(TILESIZE * 2, TILESIZE * 2, 0))
+        self.allplayers.add(Player(TILESIZE * 4, TILESIZE * 5, 1))
 
-        self.alltiles.add(Tile(0, 0))
-        self.alltiles.add(Tile(80, 0))
-        self.alltiles.add(Tile(0, 40))
-        self.alltiles.add(Tile(40, 40))
-        self.alltiles.add(Tile(200, 200))
-        self.alltiles.add(Tile(320, 320))
-        self.alltiles.add(Tile(200, 240))
+        self.alltiles.add(aux.Tile(0, 0))
+        self.alltiles.add(aux.Tile(80, 0))
+        self.alltiles.add(aux.Tile(0, 40))
+        self.alltiles.add(aux.Tile(40, 40))
+        self.alltiles.add(aux.Tile(200, 200))
+        self.alltiles.add(aux.Tile(320, 320))
+        self.alltiles.add(aux.Tile(200, 240))
 
     def play(self):
         self.setup()
@@ -162,12 +146,14 @@ class Game:
                     pygame.quit()
 
             self.alltiles.update(dt)
-            self.allbombs.update(dt)
+            self.allbombs.update(self.alltiles, self.allexplosions, dt)
+            self.allexplosions.update(dt)
             self.allplayers.update(self.alltiles, self.allbombs, dt)
 
             self.screen.blit(self.background, (0, 0))
             self.alltiles.draw(self.screen)
             self.allbombs.draw(self.screen)
+            self.allexplosions.draw(self.screen)
             self.allplayers.draw(self.screen)
 
             pygame.display.flip()
