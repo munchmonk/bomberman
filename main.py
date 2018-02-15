@@ -1,11 +1,18 @@
+# TODO:
+# - optimize Bomb class collision detection with tiles
+
+
+
 import pygame
 import time
 import aux
 
 
 TILESIZE = 40
-WIDTH = 800
-HEIGHT = 600
+HOR_TILES = 13
+VER_TILES = 13
+WIDTH = TILESIZE * HOR_TILES
+HEIGHT = TILESIZE * VER_TILES
 UP = 'up'
 RIGHT = 'right'
 LEFT = 'left'
@@ -15,8 +22,71 @@ CONTROLS = {0: {UP: pygame.K_w,  RIGHT: pygame.K_d,     LEFT: pygame.K_a,    DOW
             1: {UP: pygame.K_UP, RIGHT: pygame.K_RIGHT, LEFT: pygame.K_LEFT, DOWN: pygame.K_DOWN, BOMB: pygame.K_m}}
 
 
+class Game:
+    def __init__(self):
+        pygame.init()
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.screen.convert()
+        self.background = pygame.image.load("background.png").convert()
+        pygame.display.set_caption("Bomberman!")
+        self.clock = pygame.time.Clock()
+        self.FPS = 30
+
+        self.alltiles = pygame.sprite.Group()
+        self.allplayers = pygame.sprite.Group()
+        self.allbombs = pygame.sprite.Group()
+        self.allexplosions = pygame.sprite.Group()
+        self.allsofts = pygame.sprite.Group()
+
+        self.background_surf = pygame.Surface((WIDTH, HEIGHT))
+
+    def setup(self):
+        self.allplayers.add(Player(TILESIZE * 1, TILESIZE * 1, 0))
+        self.allplayers.add(Player(WIDTH - TILESIZE * 2, HEIGHT - TILESIZE * 2, 1))
+
+        # Screen edges
+        for i in range(WIDTH / TILESIZE):
+            self.alltiles.add(aux.Tile(i * TILESIZE, 0))
+            self.alltiles.add(aux.Tile(i * TILESIZE, HEIGHT - TILESIZE))
+        for i in range(HEIGHT / TILESIZE):
+            self.alltiles.add(aux.Tile(0, i * TILESIZE))
+            self.alltiles.add(aux.Tile(WIDTH - TILESIZE, i * TILESIZE))
+
+        # Inside structure
+        for i in range(2, WIDTH - 3 * TILESIZE, 2):
+            for j in range(2, HEIGHT - 3 * TILESIZE, 2):
+                self.alltiles.add(aux.Tile(i * TILESIZE, j * TILESIZE))
+
+        # Create single background image
+        self.background_surf.blit(self.background, (0, 0))
+        for tile in self.alltiles:
+            self.background_surf.blit(tile.image, tile.rect)
+
+    def play(self):
+        self.setup()
+        while True:
+            dt = self.clock.tick(self.FPS)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+
+            self.allplayers.update(self.alltiles, self.allsofts, self.allbombs, self.allexplosions, dt)
+            self.allbombs.update(self.alltiles, self.allsofts, self.allexplosions, dt)
+            self.allexplosions.update(dt)
+
+            self.screen.blit(self.background_surf, (0, 0))
+            self.allsofts.draw(self.screen)
+            self.allbombs.draw(self.screen)
+            self.allexplosions.draw(self.screen)
+            self.allplayers.draw(self.screen)
+
+            pygame.display.flip()
+
+
 class Player(pygame.sprite.Sprite):
-    IMG = [pygame.image.load("player1.png"), pygame.image.load("player2.png")]
+    pygame.init()
+    pygame.display.set_mode((WIDTH, HEIGHT))
+    IMG = [pygame.image.load("player1.png").convert_alpha(), pygame.image.load("player2.png").convert_alpha()]
     BOMB_COOLDOWN = 0.4
     BOMB_RANGE = [2, 3]
 
@@ -25,7 +95,7 @@ class Player(pygame.sprite.Sprite):
         self.side = side
         self.image = Player.IMG[self.side]
         self.rect = self.image.get_rect(topleft=(x, y))
-        self.speed = 0.3
+        self.speed = 0.5
         self.moving = (0, 0)
         self.to_next_tile = 0
         self.lastbomb = 0
@@ -41,7 +111,7 @@ class Player(pygame.sprite.Sprite):
             bombs.add(aux.Bomb(bomb_x, bomb_y, self.bomb_range))
             self.lastbomb = time.time()
 
-        # Movement input
+        # Movement input - screen edges are not checked since there will always be a hard block
         if self.moving == (0, 0):
             legalmove = True
             # LEFT
@@ -60,7 +130,7 @@ class Player(pygame.sprite.Sprite):
                         if bomb.rect.left == self.rect.left - TILESIZE and bomb.rect.top == self.rect.top:
                             legalmove = False
                             break
-                if self.rect.left > 0 and legalmove:
+                if legalmove:
                     self.moving = (-1, 0)
                     self.to_next_tile = TILESIZE
             # UP
@@ -79,7 +149,7 @@ class Player(pygame.sprite.Sprite):
                         if bomb.rect.top == self.rect.top - TILESIZE and bomb.rect.left == self.rect.left:
                             legalmove = False
                             break
-                if self.rect.top > 0 and legalmove:
+                if legalmove:
                     self.moving = (0, -1)
                     self.to_next_tile = TILESIZE
             # RIGHT
@@ -98,7 +168,7 @@ class Player(pygame.sprite.Sprite):
                         if bomb.rect.right == self.rect.right + TILESIZE and bomb.rect.top == self.rect.top:
                             legalmove = False
                             break
-                if self.rect.right < WIDTH and legalmove:
+                if legalmove:
                     self.moving = (1, 0)
                     self.to_next_tile = TILESIZE
             # DOWN
@@ -117,7 +187,7 @@ class Player(pygame.sprite.Sprite):
                         if bomb.rect.bottom == self.rect.bottom + TILESIZE and bomb.rect.left == self.rect.left:
                             legalmove = False
                             break
-                if self.rect.bottom < HEIGHT and legalmove:
+                if legalmove:
                     self.moving = (0, 1)
                     self.to_next_tile = TILESIZE
 
@@ -143,59 +213,6 @@ class Player(pygame.sprite.Sprite):
             if self.rect.x == explosion.rect.x and self.rect.y == explosion.rect.y:
                 self.kill()
                 return
-
-
-class Game:
-    pygame.init()
-
-    def __init__(self):
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        self.background = pygame.image.load("background.png")
-        pygame.display.set_caption("bomberman")
-        self.clock = pygame.time.Clock()
-        self.alltiles = pygame.sprite.Group()
-        self.allplayers = pygame.sprite.Group()
-        self.allbombs = pygame.sprite.Group()
-        self.allexplosions = pygame.sprite.Group()
-        self.allsofts = pygame.sprite.Group()
-
-    def setup(self):
-        self.allplayers.add(Player(TILESIZE * 2, TILESIZE * 2, 0))
-        self.allplayers.add(Player(TILESIZE * 4, TILESIZE * 5, 1))
-
-        self.allsofts.add(aux.Soft(160, 160))
-
-        self.alltiles.add(aux.Tile(0, 0))
-        self.alltiles.add(aux.Tile(80, 0))
-        self.alltiles.add(aux.Tile(0, 40))
-        self.alltiles.add(aux.Tile(40, 40))
-        self.alltiles.add(aux.Tile(200, 200))
-        self.alltiles.add(aux.Tile(320, 320))
-        self.alltiles.add(aux.Tile(200, 240))
-
-    def play(self):
-        self.setup()
-
-        while True:
-            dt = self.clock.tick(60)
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-
-            self.alltiles.update(dt)
-            self.allbombs.update(self.alltiles, self.allsofts, self.allexplosions, dt)
-            self.allexplosions.update(dt)
-            self.allsofts.update(dt)
-            self.allplayers.update(self.alltiles, self.allsofts, self.allbombs, self.allexplosions, dt)
-
-            self.screen.blit(self.background, (0, 0))
-            self.alltiles.draw(self.screen)
-            self.allsofts.draw(self.screen)
-            self.allbombs.draw(self.screen)
-            self.allexplosions.draw(self.screen)
-            self.allplayers.draw(self.screen)
-
-            pygame.display.flip()
 
 
 if __name__ == "__main__":

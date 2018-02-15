@@ -1,11 +1,16 @@
 import pygame
 import time
 
+import main
+
+pygame.init()
+pygame.display.set_mode((main.WIDTH, main.HEIGHT))
+
 TILESIZE = 40
 
 
 class Tile(pygame.sprite.Sprite):
-    IMG = pygame.image.load("tile.png")
+    IMG = pygame.image.load("tile.png").convert_alpha()
 
     def __init__(self, x, y, *groups):
         super(Tile, self).__init__(*groups)
@@ -17,7 +22,7 @@ class Tile(pygame.sprite.Sprite):
 
 
 class Soft(pygame.sprite.Sprite):
-    IMG = pygame.image.load("soft.png")
+    IMG = pygame.image.load("soft.png").convert_alpha()
 
     def __init__(self, x, y, *groups):
         super(Soft, self).__init__(*groups)
@@ -29,7 +34,7 @@ class Soft(pygame.sprite.Sprite):
 
 
 class Bomb(pygame.sprite.Sprite):
-    IMG = pygame.image.load("bomb.png")
+    IMG = pygame.image.load("bomb.png").convert_alpha()
     LIFETIME = 3
 
     def __init__(self, x, y, bomb_range, *groups):
@@ -126,8 +131,8 @@ class Bomb(pygame.sprite.Sprite):
 
 
 class Explosion(pygame.sprite.Sprite):
-    IMG = pygame.image.load("explosion.png")
-    LIFETIME = 1
+    IMG = pygame.image.load("explosion.png").convert_alpha()
+    LIFETIME = 0.4
 
     def __init__(self, x, y, *groups):
         super(Explosion, self).__init__(*groups)
