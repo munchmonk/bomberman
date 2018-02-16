@@ -2,6 +2,7 @@ import pygame
 import time
 
 import main
+import layouts
 
 pygame.init()
 pygame.display.set_mode((main.WIDTH, main.HEIGHT))
@@ -49,82 +50,59 @@ class Bomb(pygame.sprite.Sprite):
             # Central explosion
             explosions.add(Explosion(self.rect.x, self.rect.y))
 
-            # Collision with walls - LEFT
-            for i in range(1, self.bomb_range + 1):
-                legalmove = True
-                foundsoft = False
-                for tile in tiles:
-                    if tile.rect.left == self.rect.left - TILESIZE * i and tile.rect.top == self.rect.top:
-                        legalmove = False
+
+            left, right, up, down = layouts.get_bomb_collisions(self.rect, self.bomb_range, 0)
+
+            # Collision - LEFT
+            foundsoft = False
+            for i in range(1, left + 1):
+                explosions.add(Explosion(self.rect.x - TILESIZE * i, self.rect.y))
+                for soft in softs:
+                    if soft.rect.left == self.rect.left - TILESIZE * i and soft.rect.top == self.rect.top:
+                        softs.remove(soft)
+                        foundsoft = True
                         break
-                if legalmove:
-                    for soft in softs:
-                        if soft.rect.left == self.rect.left - TILESIZE * i and soft.rect.top == self.rect.top:
-                            foundsoft = True
-                            softs.remove(soft)
-                            break
-                    explosions.add(Explosion(self.rect.x - TILESIZE * i, self.rect.y))
-                    if foundsoft:
-                        break
-                else:
+                if foundsoft:
                     break
-            # Collision with walls - UP
-            for i in range(1, self.bomb_range + 1):
-                legalmove = True
-                foundsoft = False
-                for tile in tiles:
-                    if tile.rect.top == self.rect.top - TILESIZE * i and tile.rect.left == self.rect.left:
-                        legalmove = False
+
+            # Collision - RIGHT
+            foundsoft = False
+            for i in range(1, right + 1):
+                explosions.add(Explosion(self.rect.x + TILESIZE * i, self.rect.y))
+                for soft in softs:
+                    if soft.rect.right == self.rect.right + TILESIZE * i and soft.rect.top == self.rect.top:
+                        softs.remove(soft)
+                        foundsoft = True
                         break
-                if legalmove:
-                    for soft in softs:
-                        if soft.rect.top == self.rect.top - TILESIZE * i and soft.rect.left == self.rect.left:
-                            foundsoft = True
-                            softs.remove(soft)
-                            break
-                    explosions.add(Explosion(self.rect.x, self.rect.y - TILESIZE * i))
-                    if foundsoft:
-                        break
-                else:
+                if foundsoft:
                     break
-            # Collision with walls - RIGHT
-            for i in range(1, self.bomb_range + 1):
-                legalmove = True
-                foundsoft = False
-                for tile in tiles:
-                    if tile.rect.right == self.rect.right + TILESIZE * i and tile.rect.top == self.rect.top:
-                        legalmove = False
+
+            # Collision - UP
+            foundsoft = False
+            for i in range(1, up + 1):
+                explosions.add(Explosion(self.rect.x, self.rect.y - TILESIZE * i))
+                for soft in softs:
+                    if soft.rect.top == self.rect.top - TILESIZE * i and soft.rect.left == self.rect.left:
+                        softs.remove(soft)
+                        foundsoft = True
                         break
-                if legalmove:
-                    for soft in softs:
-                        if soft.rect.right == self.rect.right + TILESIZE * i and soft.rect.top == self.rect.top:
-                            foundsoft = True
-                            softs.remove(soft)
-                            break
-                    explosions.add(Explosion(self.rect.x + TILESIZE * i, self.rect.y))
-                    if foundsoft:
-                        break
-                else:
+                if foundsoft:
                     break
-            # Collision with walls - DOWN
-            for i in range(1, self.bomb_range + 1):
-                legalmove = True
-                foundsoft = False
-                for tile in tiles:
-                    if tile.rect.bottom == self.rect.bottom + TILESIZE * i and tile.rect.left == self.rect.left:
-                        legalmove = False
+
+            # Collision - DOWN
+            foundsoft = False
+            for i in range(1, down + 1):
+                explosions.add(Explosion(self.rect.x, self.rect.y + TILESIZE * i))
+                for soft in softs:
+                    if soft.rect.bottom == self.rect.bottom + TILESIZE * i and soft.rect.left == self.rect.left:
+                        softs.remove(soft)
+                        foundsoft = True
                         break
-                if legalmove:
-                    for soft in softs:
-                        if soft.rect.bottom == self.rect.bottom + TILESIZE * i and soft.rect.left == self.rect.left:
-                            foundsoft = True
-                            softs.remove(soft)
-                            break
-                    explosions.add(Explosion(self.rect.x, self.rect.y + TILESIZE * i))
-                    if foundsoft:
-                        break
-                else:
+                if foundsoft:
                     break
+
+
+
 
             self.kill()
             return

@@ -6,6 +6,7 @@
 import pygame
 import time
 import aux
+import layouts
 
 
 TILESIZE = 40
@@ -44,23 +45,16 @@ class Game:
         self.allplayers.add(Player(TILESIZE * 1, TILESIZE * 1, 0))
         self.allplayers.add(Player(WIDTH - TILESIZE * 2, HEIGHT - TILESIZE * 2, 1))
 
-        # Screen edges
-        for i in range(WIDTH / TILESIZE):
-            self.alltiles.add(aux.Tile(i * TILESIZE, 0))
-            self.alltiles.add(aux.Tile(i * TILESIZE, HEIGHT - TILESIZE))
-        for i in range(HEIGHT / TILESIZE):
-            self.alltiles.add(aux.Tile(0, i * TILESIZE))
-            self.alltiles.add(aux.Tile(WIDTH - TILESIZE, i * TILESIZE))
-
-        # Inside structure
-        for i in range(2, WIDTH - 3 * TILESIZE, 2):
-            for j in range(2, HEIGHT - 3 * TILESIZE, 2):
-                self.alltiles.add(aux.Tile(i * TILESIZE, j * TILESIZE))
+        # Create hard blocks layout
+        layouts.internal_layout(self.alltiles, 0)
 
         # Create single background image
         self.background_surf.blit(self.background, (0, 0))
         for tile in self.alltiles:
             self.background_surf.blit(tile.image, tile.rect)
+
+        # Test soft blocks
+        self.allsofts.add(aux.Soft(TILESIZE * 3, TILESIZE * 3))
 
     def play(self):
         self.setup()
@@ -81,6 +75,9 @@ class Game:
             self.allplayers.draw(self.screen)
 
             pygame.display.flip()
+
+            if 1000 / dt < 20:
+                print(1000 / dt)
 
 
 class Player(pygame.sprite.Sprite):
