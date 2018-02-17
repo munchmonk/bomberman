@@ -1,13 +1,4 @@
-try:
-    a = 3 / 0
-    print("success!")
-except:
-    print("failure...")
+A, B, C = range(3)
 
-
-try:
-    a = 3 / 0
-except:
-    pass
-finally:
-    print("yaya")
+print(A)
+print(C)

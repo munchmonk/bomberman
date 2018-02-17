@@ -5,31 +5,32 @@ import aux
 import random
 
 
-def screen_edge(tiles):
+def screen_edge(hards):
     for i in range(const.ARENAWIDTH / const.TILESIZE):
-            tiles.add(aux.Tile(i * const.TILESIZE, 0))
-            tiles.add(aux.Tile(i * const.TILESIZE, const.ARENAHEIGHT - const.TILESIZE))
+            hards.add(aux.Hard(i * const.TILESIZE, 0))
+            hards.add(aux.Hard(i * const.TILESIZE, const.ARENAHEIGHT - const.TILESIZE))
     for i in range(const.ARENAHEIGHT / const.TILESIZE):
-        tiles.add(aux.Tile(0, i * const.TILESIZE))
-        tiles.add(aux.Tile(const.ARENAWIDTH - const.TILESIZE, i * const.TILESIZE))
+        hards.add(aux.Hard(0, i * const.TILESIZE))
+        hards.add(aux.Hard(const.ARENAWIDTH - const.TILESIZE, i * const.TILESIZE))
 
 
-def internal_layout(tiles, n):
-    screen_edge(tiles)
+def internal_layout(hards, n):
+    screen_edge(hards)
     if n == const.LAYOUTS[const.STANDARD]:
         for i in range(2, const.ARENAWIDTH - 3 * const.TILESIZE, 2):
                 for j in range(2, const.ARENAHEIGHT - 3 * const.TILESIZE, 2):
-                    tiles.add(aux.Tile(i * const.TILESIZE, j * const.TILESIZE))
+                    hards.add(aux.Hard(i * const.TILESIZE, j * const.TILESIZE))
 
 
-def get_tile_coord(rect):
+def get_hard_coord(rect):
     x = rect.x / const.TILESIZE
     y = rect.y / const.TILESIZE
     return x, y
 
 
-def get_tile_collisions(rect, n, bomb_range=1):
-    x, y = get_tile_coord(rect)
+def get_hard_collisions(rect, n, bomb_range=1):
+    """ returns the number of free hards in each direction, minus the bomb_range """
+    x, y = get_hard_coord(rect)
     left, right, up, down = 0, 0, 0, 0
 
     if n == const.LAYOUTS[const.STANDARD]:

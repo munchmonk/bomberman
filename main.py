@@ -1,6 +1,8 @@
 # TODO:
 # retry dirty sprites?
 # add list of "occupied" tiles for faster collision detection (softs. etc.)?
+# bots???
+# powerups?
 
 
 import pygame
@@ -25,11 +27,12 @@ class Game:
         self.clock = pygame.time.Clock()
 
         # Sprite groups
-        self.alltiles = pygame.sprite.Group()
+        self.allhards = pygame.sprite.Group()
         self.allplayers = pygame.sprite.Group()
         self.allbombs = pygame.sprite.Group()
         self.allexplosions = pygame.sprite.Group()
         self.allsofts = pygame.sprite.Group()
+        self.allpowerups = pygame.sprite.Group()
 
         # Joystick
         pygame.joystick.init()
@@ -40,17 +43,19 @@ class Game:
             self.stick = None
 
     def setup(self):
-        self.allplayers.add(Player(const.TILESIZE * 1, const.TILESIZE * 1, const.PLAYER1))
-        self.allplayers.add(Player(const.ARENAWIDTH - const.TILESIZE * 2, const.ARENAHEIGHT - const.TILESIZE * 2,
-                                   const.PLAYER2))
+        # Create players
+        self.allplayers.add(Player(const.PLAYERSPAWNLOCATION[const.PLAYER1][const.X],
+                                   const.PLAYERSPAWNLOCATION[const.PLAYER1][const.Y], const.PLAYER1))
+        self.allplayers.add(Player(const.PLAYERSPAWNLOCATION[const.PLAYER2][const.X],
+                                   const.PLAYERSPAWNLOCATION[const.PLAYER2][const.Y], const.PLAYER2))
 
         # Create hard blocks layout
-        layouts.internal_layout(self.alltiles, const.LAYOUTS[const.STANDARD])
+        layouts.internal_layout(self.allhards, const.LAYOUTS[const.STANDARD])
 
         # Create single background image
         self.background_surf.blit(self.background, (0, 0))
-        for tile in self.alltiles:
-            self.background_surf.blit(tile.image, tile.rect)
+        for hard in self.allhards:
+            self.background_surf.blit(hard.image, hard.rect)
 
         # Create random soft blocks
         layouts.fill_with_softs(self.allsofts, const.LAYOUTS[const.STANDARD])
@@ -64,8 +69,8 @@ class Game:
                     pygame.quit()
 
             # Update sprites
-            self.allplayers.update(self.stick, self.allsofts, self.allbombs, self.allexplosions, dt)
-            self.allbombs.update(self.allsofts, self.allexplosions)
+            self.allplayers.update(self.stick, self.allsofts, self.allbombs, self.allexplosions, self.allpowerups,  dt)
+            self.allbombs.update(self.allsofts, self.allexplosions, self.allpowerups)
             self.allexplosions.update()
 
             # Draw sprites
@@ -73,6 +78,7 @@ class Game:
             self.allsofts.draw(self.screen)
             self.allbombs.draw(self.screen)
             self.allexplosions.draw(self.screen)
+            self.allpowerups.draw(self.screen)
             self.allplayers.draw(self.screen)
 
             pygame.display.flip()
@@ -87,40 +93,57 @@ class Player(pygame.sprite.Sprite):
     pygame.display.set_mode((const.ARENAWIDTH, const.ARENAHEIGHT))
     IMG = {const.PLAYER1: pygame.image.load("player1.png").convert_alpha(),
            const.PLAYER2: pygame.image.load("player2.png").convert_alpha()}
-    BOMB_COOLDOWN = 0.2
-    BOMB_RANGE = {const.PLAYER1: 2, const.PLAYER2: 3}
+    BOMB_COOLDOWN = 0.3
+    BASE_BOMB_RANGE = 2
+    BASE_MAX_BOMBS = 1
+    BASE_SPEED = 0.2
+    SPEED_INCREASE = 0.05
 
-    def __init__(self, x, y, side, *groups):
+    def __init__(self, x, y, playerID, *groups):
         super(Player, self).__init__(*groups)
-        self.side = side
-        self.image = Player.IMG[self.side]
+        self.playerID = playerID
+        self.image = Player.IMG[self.playerID]
         self.rect = self.image.get_rect(topleft=(x, y))
-        self.speed = 0.5
+
+        # State variables
         self.moving = (0, 0)
         self.to_next_tile = 0
         self.lastbomb = 0
-        self.bomb_range = Player.BOMB_RANGE[self.side]
+        self.active_bombs = []
 
-    def update(self, stick, softs, bombs, explosions, dt):
+        # Player parameters
+        self.bomb_range = Player.BASE_BOMB_RANGE
+        self.max_bombs = Player.BASE_MAX_BOMBS
+        self.speed = Player.BASE_SPEED
+
+    def update(self, stick, softs, bombs, explosions, powerups, dt):
         key = pygame.key.get_pressed()
 
+        # Update number of active bombs
+        curr_time = time.time()
+        for bomb in self.active_bombs:
+            if curr_time - bomb >= aux.Bomb.LIFETIME:
+                self.active_bombs.remove(bomb)
+
         # Place bombs
-        if (key[const.KEYBOARD_CONTROLS[self.side][const.BOMB]] or
-        (stick and stick.get_button(const.JOYSTICK_CONTROLS[self.side][const.BOMB]))) and \
-        time.time() - self.lastbomb >= Player.BOMB_COOLDOWN:
+        if (key[const.KEYBOARD_CONTROLS[self.playerID][const.BOMB]] or
+        (stick and stick.get_button(const.JOYSTICK_CONTROLS[self.playerID][const.BOMB]))) and \
+        time.time() - self.lastbomb >= Player.BOMB_COOLDOWN and \
+        len(self.active_bombs) < self.max_bombs:
             bomb_x = self.rect.left - (const.TILESIZE - self.to_next_tile) * self.moving[0]
             bomb_y = self.rect.top - (const.TILESIZE - self.to_next_tile) * self.moving[1]
             bombs.add(aux.Bomb(bomb_x, bomb_y, self.bomb_range))
             self.lastbomb = time.time()
+            self.active_bombs.append(time.time())
 
-        # Movement input - screen edges are not checked since there will always be a hard block
+        # Input - movement (screen edges are not checked since there will always be a hard block)
         if self.moving == (0, 0):
             legalmove = True
-            left, right, up, down = layouts.get_tile_collisions(self.rect, const.LAYOUTS[const.STANDARD])
+            left, right, up, down = layouts.get_hard_collisions(self.rect, const.LAYOUTS[const.STANDARD])
 
             # LEFT
-            if (key[const.KEYBOARD_CONTROLS[self.side][const.LEFT]] or
-            (stick and stick.get_axis(const.JOYSTICK_CONTROLS[self.side][const.HOR_AXIS]) <
+            if (key[const.KEYBOARD_CONTROLS[self.playerID][const.LEFT]] or
+            (stick and stick.get_axis(const.JOYSTICK_CONTROLS[self.playerID][const.HOR_AXIS]) <
             const.JOYAXISTOLERANCE * (-1))) \
             and left:
                 for soft in softs:
@@ -136,8 +159,8 @@ class Player(pygame.sprite.Sprite):
                     self.moving = (-1, 0)
                     self.to_next_tile = const.TILESIZE
             # UP
-            if (key[const.KEYBOARD_CONTROLS[self.side][const.UP]] or
-            (stick and stick.get_axis(const.JOYSTICK_CONTROLS[self.side][const.VER_AXIS]) <
+            if (key[const.KEYBOARD_CONTROLS[self.playerID][const.UP]] or
+            (stick and stick.get_axis(const.JOYSTICK_CONTROLS[self.playerID][const.VER_AXIS]) <
             const.JOYAXISTOLERANCE * (-1))) \
             and up:
                 for soft in softs:
@@ -153,9 +176,10 @@ class Player(pygame.sprite.Sprite):
                     self.moving = (0, -1)
                     self.to_next_tile = const.TILESIZE
             # RIGHT
-            if (key[const.KEYBOARD_CONTROLS[self.side][const.RIGHT]] or
-            (stick and stick.get_axis(const.JOYSTICK_CONTROLS[self.side][const.HOR_AXIS]) > const.JOYAXISTOLERANCE)) \
-            and right:
+            if (key[const.KEYBOARD_CONTROLS[self.playerID][const.RIGHT]] or
+            (stick and
+            stick.get_axis(const.JOYSTICK_CONTROLS[self.playerID][const.HOR_AXIS]) > const.JOYAXISTOLERANCE)) and \
+            right:
                 for soft in softs:
                     if soft.rect.right == self.rect.right + const.TILESIZE and soft.rect.top == self.rect.top:
                         legalmove = False
@@ -169,9 +193,10 @@ class Player(pygame.sprite.Sprite):
                     self.moving = (1, 0)
                     self.to_next_tile = const.TILESIZE
             # DOWN
-            if (key[const.KEYBOARD_CONTROLS[self.side][const.DOWN]] or
-            (stick and stick.get_axis(const.JOYSTICK_CONTROLS[self.side][const.VER_AXIS]) > const.JOYAXISTOLERANCE)) \
-            and down:
+            if (key[const.KEYBOARD_CONTROLS[self.playerID][const.DOWN]] or
+            (stick and
+            stick.get_axis(const.JOYSTICK_CONTROLS[self.playerID][const.VER_AXIS]) > const.JOYAXISTOLERANCE)) and \
+            down:
                 for soft in softs:
                     if soft.rect.bottom == self.rect.bottom + const.TILESIZE and soft.rect.left == self.rect.left:
                         legalmove = False
@@ -185,7 +210,7 @@ class Player(pygame.sprite.Sprite):
                     self.moving = (0, 1)
                     self.to_next_tile = const.TILESIZE
 
-        # Actual movement
+        # Action - movement
         if self.moving != (0, 0):
             dx = round(self.moving[0] * self.speed * dt)
             dy = round(self.moving[1] * self.speed * dt)
@@ -201,6 +226,17 @@ class Player(pygame.sprite.Sprite):
                 self.rect.y += self.to_next_tile * self.moving[1]
                 self.moving = (0, 0)
                 self.to_next_tile = 0
+
+        # Check collision with powerups
+        for powerup in powerups:
+            if self.rect.x == powerup.rect.x and self.rect.y == powerup.rect.y:
+                if powerup.type == const.EXTRABOMB:
+                    self.max_bombs += 1
+                elif powerup.type == const.EXTRASPEED:
+                    self.speed += Player.SPEED_INCREASE
+                elif powerup.type == const.EXTRARANGE:
+                    self.bomb_range += 1
+                powerups.remove(powerup)
 
         # Check collision with explosions
         for explosion in explosions:
