@@ -1,4 +1,3 @@
-A, B, C = range(3)
+from const import FPS
 
-print(A)
-print(C)
+print(FPS)

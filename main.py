@@ -2,14 +2,16 @@
 # retry dirty sprites?
 # add list of "occupied" tiles for faster collision detection (softs. etc.)?
 # bots???
-# powerups?
 
 
 import pygame
 import time
-import aux
+import sys
+
+import entities
 import layouts
 import const
+import util
 
 
 class Game:
@@ -20,7 +22,7 @@ class Game:
         self.screen = pygame.display.set_mode((const.WINWIDTH, const.WINHEIGHT))
         self.screen.convert_alpha()
         pygame.display.set_caption("Bomberman!")
-        self.background = pygame.image.load("background.png").convert_alpha()
+        self.background = util.load_image(const.SPRITES_PATH[const.BACKGROUND_PATH])
         self.background_surf = pygame.Surface((const.ARENAWIDTH, const.ARENAHEIGHT))
 
         # Time
@@ -50,7 +52,7 @@ class Game:
                                    const.PLAYERSPAWNLOCATION[const.PLAYER2][const.Y], const.PLAYER2))
 
         # Create hard blocks layout
-        layouts.internal_layout(self.allhards, const.LAYOUTS[const.STANDARD])
+        layouts.internal_layout(self.allhards, const.STANDARD)
 
         # Create single background image
         self.background_surf.blit(self.background, (0, 0))
@@ -58,7 +60,7 @@ class Game:
             self.background_surf.blit(hard.image, hard.rect)
 
         # Create random soft blocks
-        layouts.fill_with_softs(self.allsofts, const.LAYOUTS[const.STANDARD])
+        layouts.fill_with_softs(self.allsofts, const.STANDARD)
 
     def play(self):
         self.setup()
@@ -67,6 +69,7 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
+                    sys.exit()
 
             # Update sprites
             self.allplayers.update(self.stick, self.allsofts, self.allbombs, self.allexplosions, self.allpowerups,  dt)
@@ -83,21 +86,10 @@ class Game:
 
             pygame.display.flip()
 
-            if 1000 / dt < 40:
-                pass
-                # print(1000 / dt)
-
 
 class Player(pygame.sprite.Sprite):
-    pygame.init()
-    pygame.display.set_mode((const.ARENAWIDTH, const.ARENAHEIGHT))
-    IMG = {const.PLAYER1: pygame.image.load("player1.png").convert_alpha(),
-           const.PLAYER2: pygame.image.load("player2.png").convert_alpha()}
-    BOMB_COOLDOWN = 0.3
-    BASE_BOMB_RANGE = 2
-    BASE_MAX_BOMBS = 1
-    BASE_SPEED = 0.2
-    SPEED_INCREASE = 0.05
+    IMG = {const.PLAYER1: util.load_image(const.SPRITES_PATH[const.PLAYER1_PATH]),
+           const.PLAYER2: util.load_image(const.SPRITES_PATH[const.PLAYER2_PATH])}
 
     def __init__(self, x, y, playerID, *groups):
         super(Player, self).__init__(*groups)
@@ -112,9 +104,9 @@ class Player(pygame.sprite.Sprite):
         self.active_bombs = []
 
         # Player parameters
-        self.bomb_range = Player.BASE_BOMB_RANGE
-        self.max_bombs = Player.BASE_MAX_BOMBS
-        self.speed = Player.BASE_SPEED
+        self.bomb_range = const.BASE_BOMB_RANGE
+        self.max_bombs = const.BASE_MAX_BOMBS
+        self.speed = const.BASE_SPEED
 
     def update(self, stick, softs, bombs, explosions, powerups, dt):
         key = pygame.key.get_pressed()
@@ -122,24 +114,24 @@ class Player(pygame.sprite.Sprite):
         # Update number of active bombs
         curr_time = time.time()
         for bomb in self.active_bombs:
-            if curr_time - bomb >= aux.Bomb.LIFETIME:
+            if curr_time - bomb >= const.BOMB_LIFETIME:
                 self.active_bombs.remove(bomb)
 
         # Place bombs
         if (key[const.KEYBOARD_CONTROLS[self.playerID][const.BOMB]] or
         (stick and stick.get_button(const.JOYSTICK_CONTROLS[self.playerID][const.BOMB]))) and \
-        time.time() - self.lastbomb >= Player.BOMB_COOLDOWN and \
+        time.time() - self.lastbomb >= const.BOMB_COOLDOWN and \
         len(self.active_bombs) < self.max_bombs:
             bomb_x = self.rect.left - (const.TILESIZE - self.to_next_tile) * self.moving[0]
             bomb_y = self.rect.top - (const.TILESIZE - self.to_next_tile) * self.moving[1]
-            bombs.add(aux.Bomb(bomb_x, bomb_y, self.bomb_range))
+            bombs.add(entities.Bomb(bomb_x, bomb_y, self.bomb_range))
             self.lastbomb = time.time()
             self.active_bombs.append(time.time())
 
         # Input - movement (screen edges are not checked since there will always be a hard block)
         if self.moving == (0, 0):
             legalmove = True
-            left, right, up, down = layouts.get_hard_collisions(self.rect, const.LAYOUTS[const.STANDARD])
+            left, right, up, down = layouts.get_hard_collisions(self.rect, const.STANDARD)
 
             # LEFT
             if (key[const.KEYBOARD_CONTROLS[self.playerID][const.LEFT]] or
@@ -233,7 +225,7 @@ class Player(pygame.sprite.Sprite):
                 if powerup.type == const.EXTRABOMB:
                     self.max_bombs += 1
                 elif powerup.type == const.EXTRASPEED:
-                    self.speed += Player.SPEED_INCREASE
+                    self.speed += const.SPEED_INCREASE
                 elif powerup.type == const.EXTRARANGE:
                     self.bomb_range += 1
                 powerups.remove(powerup)

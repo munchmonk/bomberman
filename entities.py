@@ -4,16 +4,13 @@ import random
 
 import const
 import layouts
-
-
-pygame.init()
-pygame.display.set_mode((const.WINWIDTH, const.WINHEIGHT))
+import util
 
 
 class Powerup(pygame.sprite.Sprite):
-    IMG = {const.EXTRABOMB: pygame.image.load("extrabomb.png").convert_alpha(),
-           const.EXTRASPEED: pygame.image.load("extraspeed.png").convert_alpha(),
-           const.EXTRARANGE: pygame.image.load("extrafire.png").convert_alpha()}
+    IMG = {const.EXTRABOMB: util.load_image(const.SPRITES_PATH[const.EXTRABOMB_PATH]),
+           const.EXTRASPEED: util.load_image(const.SPRITES_PATH[const.EXTRASPEED_PATH]),
+           const.EXTRARANGE: util.load_image(const.SPRITES_PATH[const.EXTRARANGE_PATH])}
 
     def __init__(self, x, y, *groups):
         super(Powerup, self).__init__(*groups)
@@ -26,7 +23,7 @@ class Powerup(pygame.sprite.Sprite):
 
 
 class Hard(pygame.sprite.Sprite):
-    IMG = pygame.image.load("tile.png").convert_alpha()
+    IMG = util.load_image(const.SPRITES_PATH[const.HARD_PATH])
 
     def __init__(self, x, y, *groups):
         super(Hard, self).__init__(*groups)
@@ -38,7 +35,7 @@ class Hard(pygame.sprite.Sprite):
 
 
 class Soft(pygame.sprite.Sprite):
-    IMG = pygame.image.load("banana.png").convert_alpha()
+    IMG = util.load_image(const.SPRITES_PATH[const.SOFT_PATH])
 
     def __init__(self, x, y, *groups):
         super(Soft, self).__init__(*groups)
@@ -55,8 +52,7 @@ def spawn_powerup(soft, powerups):
 
 
 class Bomb(pygame.sprite.Sprite):
-    IMG = pygame.image.load("bomb.png").convert_alpha()
-    LIFETIME = 3
+    IMG = util.load_image(const.SPRITES_PATH[const.BOMB_PATH])
 
     def __init__(self, x, y, bomb_range, *groups):
         super(Bomb, self).__init__(*groups)
@@ -66,12 +62,11 @@ class Bomb(pygame.sprite.Sprite):
         self.bomb_range = bomb_range
 
     def update(self, softs, explosions, powerups):
-        if time.time() - self.spawned >= Bomb.LIFETIME:
+        if time.time() - self.spawned >= const.BOMB_LIFETIME:
             # Central explosion
             explosions.add(Explosion(self.rect.x, self.rect.y))
 
-            left, right, up, down = layouts.get_hard_collisions(self.rect, const.LAYOUTS[const.STANDARD],
-                                                                self.bomb_range)
+            left, right, up, down = layouts.get_hard_collisions(self.rect, const.STANDARD, self.bomb_range)
 
             # Collision - LEFT
             foundsoft = False
@@ -143,8 +138,7 @@ class Bomb(pygame.sprite.Sprite):
 
 
 class Explosion(pygame.sprite.Sprite):
-    IMG = pygame.image.load("explosion.png").convert_alpha()
-    LIFETIME = 0.2
+    IMG = util.load_image(const.SPRITES_PATH[const.EXPLOSION_PATH])
 
     def __init__(self, x, y, *groups):
         super(Explosion, self).__init__(*groups)
@@ -153,6 +147,6 @@ class Explosion(pygame.sprite.Sprite):
         self.spawned = time.time()
 
     def update(self):
-        if time.time() - self.spawned >= Explosion.LIFETIME:
+        if time.time() - self.spawned >= const.EXPLOSION_LIFETIME:
             self.kill()
             return
