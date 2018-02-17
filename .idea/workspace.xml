@@ -2,27 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="1a1cd509-984b-4cde-ab83-eac58b6739c4" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Lightning bolt yellow.jpg" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/aux.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/background.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/banana.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/bomb.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/explosion.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/extrabomb.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/extrafire.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/extraspeed.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/newbomb.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/oldbackground.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/oldbomb.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/oldplayer1.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/player1.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/player2.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/soft.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tile.png" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/images/player3.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/ai.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/const.py" afterPath="$PROJECT_DIR$/const.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/entities.py" afterPath="$PROJECT_DIR$/entities.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/layouts.py" afterPath="$PROJECT_DIR$/layouts.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/main.py" afterPath="$PROJECT_DIR$/main.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test.py" afterPath="$PROJECT_DIR$/test.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="bomberman.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -46,24 +32,36 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="main.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="main.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="6.875" vertical-offset="0" max-vertical-offset="3720">
-              <caret line="231" column="0" selection-start-line="231" selection-start-column="0" selection-end-line="231" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="1540" max-vertical-offset="4395">
+              <caret line="153" column="30" selection-start-line="153" selection-start-column="30" selection-end-line="153" selection-end-column="30" />
               <folding>
-                <element signature="e#120#133#0" expanded="true" />
+                <element signature="e#129#142#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="const.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="const.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/const.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="990">
-              <caret line="42" column="33" selection-start-line="42" selection-start-column="33" selection-end-line="42" selection-end-column="33" />
+            <state vertical-scroll-proportion="0.23076923" vertical-offset="0" max-vertical-offset="1065">
+              <caret line="7" column="13" selection-start-line="7" selection-start-column="13" selection-end-line="7" selection-end-column="13" />
               <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ai.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/ai.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="415" max-vertical-offset="945">
+              <caret line="56" column="66" selection-start-line="56" selection-start-column="66" selection-end-line="56" selection-end-column="66" />
+              <folding>
+                <element signature="e#0#12#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -71,8 +69,8 @@
       <file leaf-file-name="layouts.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/layouts.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1005">
-              <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1050">
+              <caret line="23" column="0" selection-start-line="23" selection-start-column="0" selection-end-line="23" selection-end-column="0" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
               </folding>
@@ -83,8 +81,8 @@
       <file leaf-file-name="entities.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/entities.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="774" max-vertical-offset="2355">
-              <caret line="64" column="60" selection-start-line="64" selection-start-column="52" selection-end-line="64" selection-end-column="60" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="1660" max-vertical-offset="2415">
+              <caret line="132" column="76" selection-start-line="132" selection-start-column="76" selection-end-line="132" selection-end-column="76" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -123,10 +121,11 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/aux.py" />
-        <option value="$PROJECT_DIR$/layouts.py" />
         <option value="$PROJECT_DIR$/test.py" />
         <option value="$PROJECT_DIR$/util.py" />
+        <option value="$PROJECT_DIR$/layouts.py" />
         <option value="$PROJECT_DIR$/entities.py" />
+        <option value="$PROJECT_DIR$/ai.py" />
         <option value="$PROJECT_DIR$/main.py" />
         <option value="$PROJECT_DIR$/const.py" />
       </list>
@@ -418,7 +417,7 @@
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24940239" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.22335766" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.29489052" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -457,7 +456,7 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3330">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#120#133#0" expanded="true" />
+            <element signature="e#129#142#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -503,7 +502,7 @@
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3390">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#120#133#0" expanded="true" />
+            <element signature="e#129#142#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -561,28 +560,30 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/layouts.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="41" max-vertical-offset="1050">
+          <caret line="23" column="0" selection-start-line="23" selection-start-column="0" selection-end-line="23" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/entities.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="774" max-vertical-offset="2355">
-          <caret line="64" column="60" selection-start-line="64" selection-start-column="52" selection-end-line="64" selection-end-column="60" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="1660" max-vertical-offset="2415">
+          <caret line="132" column="76" selection-start-line="132" selection-start-column="76" selection-end-line="132" selection-end-column="76" />
           <folding>
             <element signature="e#0#13#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/const.py">
+    <entry file="file://$PROJECT_DIR$/ai.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="990">
-          <caret line="42" column="33" selection-start-line="42" selection-start-column="33" selection-end-line="42" selection-end-column="33" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/layouts.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1005">
-          <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="415" max-vertical-offset="945">
+          <caret line="56" column="66" selection-start-line="56" selection-start-column="66" selection-end-line="56" selection-end-column="66" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
           </folding>
@@ -591,11 +592,19 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="6.875" vertical-offset="0" max-vertical-offset="3720">
-          <caret line="231" column="0" selection-start-line="231" selection-start-column="0" selection-end-line="231" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="1540" max-vertical-offset="4395">
+          <caret line="153" column="30" selection-start-line="153" selection-start-column="30" selection-end-line="153" selection-end-column="30" />
           <folding>
-            <element signature="e#120#133#0" expanded="true" />
+            <element signature="e#129#142#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/const.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.23076923" vertical-offset="0" max-vertical-offset="1065">
+          <caret line="7" column="13" selection-start-line="7" selection-start-column="13" selection-end-line="7" selection-end-column="13" />
+          <folding />
         </state>
       </provider>
     </entry>

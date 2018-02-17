@@ -61,12 +61,12 @@ class Bomb(pygame.sprite.Sprite):
         self.spawned = time.time()
         self.bomb_range = bomb_range
 
-    def update(self, softs, explosions, powerups):
+    def update(self, layout, softs, explosions, powerups, free_tiles):
         if time.time() - self.spawned >= const.BOMB_LIFETIME:
             # Central explosion
             explosions.add(Explosion(self.rect.x, self.rect.y))
 
-            left, right, up, down = layouts.get_hard_collisions(self.rect, const.STANDARD, self.bomb_range)
+            left, right, up, down = layouts.get_hard_collisions(self.rect, layout, self.bomb_range)
 
             # Collision - LEFT
             foundsoft = False
@@ -78,6 +78,7 @@ class Bomb(pygame.sprite.Sprite):
                 for soft in softs:
                     if soft.rect.left == self.rect.left - const.TILESIZE * i and soft.rect.top == self.rect.top:
                         spawn_powerup(soft, powerups)
+                        free_tiles.append(layouts.get_tile_coord(soft.rect))
                         softs.remove(soft)
                         foundsoft = True
                         break
@@ -94,6 +95,7 @@ class Bomb(pygame.sprite.Sprite):
                 for soft in softs:
                     if soft.rect.right == self.rect.right + const.TILESIZE * i and soft.rect.top == self.rect.top:
                         spawn_powerup(soft, powerups)
+                        free_tiles.append(layouts.get_tile_coord(soft.rect))
                         softs.remove(soft)
                         foundsoft = True
                         break
@@ -110,6 +112,7 @@ class Bomb(pygame.sprite.Sprite):
                 for soft in softs:
                     if soft.rect.top == self.rect.top - const.TILESIZE * i and soft.rect.left == self.rect.left:
                         spawn_powerup(soft, powerups)
+                        free_tiles.append(layouts.get_tile_coord(soft.rect))
                         softs.remove(soft)
                         foundsoft = True
                         break
@@ -127,6 +130,7 @@ class Bomb(pygame.sprite.Sprite):
                 for soft in softs:
                     if soft.rect.bottom == self.rect.bottom + const.TILESIZE * i and soft.rect.left == self.rect.left:
                         spawn_powerup(soft, powerups)
+                        free_tiles.append(layouts.get_tile_coord(soft.rect))
                         softs.remove(soft)
                         foundsoft = True
                         break

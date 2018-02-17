@@ -2,6 +2,7 @@
 # retry dirty sprites?
 # add list of "occupied" tiles for faster collision detection (softs. etc.)?
 # bots???
+# sound?
 
 
 import pygame
@@ -12,6 +13,7 @@ import entities
 import layouts
 import const
 import util
+import ai
 
 
 class Game:
@@ -24,6 +26,7 @@ class Game:
         pygame.display.set_caption("Bomberman!")
         self.background = util.load_image(const.SPRITES_PATH[const.BACKGROUND_PATH])
         self.background_surf = pygame.Surface((const.ARENAWIDTH, const.ARENAHEIGHT))
+        self.layout = const.STANDARD
 
         # Time
         self.clock = pygame.time.Clock()
@@ -44,23 +47,42 @@ class Game:
         except:
             self.stick = None
 
+        # AI
+        self.free_tiles = []
+
     def setup(self):
-        # Create players
-        self.allplayers.add(Player(const.PLAYERSPAWNLOCATION[const.PLAYER1][const.X],
-                                   const.PLAYERSPAWNLOCATION[const.PLAYER1][const.Y], const.PLAYER1))
-        self.allplayers.add(Player(const.PLAYERSPAWNLOCATION[const.PLAYER2][const.X],
-                                   const.PLAYERSPAWNLOCATION[const.PLAYER2][const.Y], const.PLAYER2))
+        # Clear everything
+        self.allplayers.empty()
+        self.allbombs.empty()
+        self.allhards.empty()
+        self.allsofts.empty()
+        self.allexplosions.empty()
+        self.allpowerups.empty()
 
         # Create hard blocks layout
         layouts.internal_layout(self.allhards, const.STANDARD)
+
+        # Create random soft blocks
+        layouts.fill_with_softs(self.allsofts, const.STANDARD)
 
         # Create single background image
         self.background_surf.blit(self.background, (0, 0))
         for hard in self.allhards:
             self.background_surf.blit(hard.image, hard.rect)
 
-        # Create random soft blocks
-        layouts.fill_with_softs(self.allsofts, const.STANDARD)
+        # AI
+        self.free_tiles = ai.get_free_tiles(self.allhards, self.allsofts)
+
+        # Create players
+        self.allplayers.add(Player(const.PLAYERSPAWNLOCATION[const.PLAYER1][const.X],
+                                   const.PLAYERSPAWNLOCATION[const.PLAYER1][const.Y],
+                                   const.PLAYER1, const.HUMAN, self.layout))
+        self.allplayers.add(Player(const.PLAYERSPAWNLOCATION[const.PLAYER2][const.X],
+                                   const.PLAYERSPAWNLOCATION[const.PLAYER2][const.Y],
+                                   const.PLAYER2, const.AI, self.layout))
+        # self.allplayers.add(Player(const.PLAYERSPAWNLOCATION[const.PLAYER3][const.X],
+        #                            const.PLAYERSPAWNLOCATION[const.PLAYER3][const.Y],
+        #                            const.PLAYER3, const.HUMAN, self.layout))
 
     def play(self):
         self.setup()
@@ -72,8 +94,9 @@ class Game:
                     sys.exit()
 
             # Update sprites
-            self.allplayers.update(self.stick, self.allsofts, self.allbombs, self.allexplosions, self.allpowerups,  dt)
-            self.allbombs.update(self.allsofts, self.allexplosions, self.allpowerups)
+            self.allplayers.update(self.stick, self.allsofts, self.allbombs, self.allexplosions, self.allpowerups,
+                                   self.free_tiles, dt)
+            self.allbombs.update(self.layout, self.allsofts, self.allexplosions, self.allpowerups, self.free_tiles)
             self.allexplosions.update()
 
             # Draw sprites
@@ -86,14 +109,20 @@ class Game:
 
             pygame.display.flip()
 
+            if len(self.allplayers) < 2:
+                self.setup()
+
 
 class Player(pygame.sprite.Sprite):
     IMG = {const.PLAYER1: util.load_image(const.SPRITES_PATH[const.PLAYER1_PATH]),
-           const.PLAYER2: util.load_image(const.SPRITES_PATH[const.PLAYER2_PATH])}
+           const.PLAYER2: util.load_image(const.SPRITES_PATH[const.PLAYER2_PATH]),
+           const.PLAYER3: util.load_image(const.SPRITES_PATH[const.PLAYER3_PATH])}
 
-    def __init__(self, x, y, playerID, *groups):
+    def __init__(self, x, y, playerID, controls, layout, *groups):
         super(Player, self).__init__(*groups)
         self.playerID = playerID
+        self.controls = controls
+        self.layout = layout
         self.image = Player.IMG[self.playerID]
         self.rect = self.image.get_rect(topleft=(x, y))
 
@@ -108,14 +137,29 @@ class Player(pygame.sprite.Sprite):
         self.max_bombs = const.BASE_MAX_BOMBS
         self.speed = const.BASE_SPEED
 
-    def update(self, stick, softs, bombs, explosions, powerups, dt):
-        key = pygame.key.get_pressed()
-
+    def update(self, stick, softs, bombs, explosions, powerups, free_tiles, dt):
         # Update number of active bombs
         curr_time = time.time()
         for bomb in self.active_bombs:
             if curr_time - bomb >= const.BOMB_LIFETIME:
                 self.active_bombs.remove(bomb)
+
+
+
+
+        # AI
+        if self.controls == const.AI:
+            threats = ai.get_threats(self.rect, bombs, free_tiles)
+            if threats:
+                print(threats)
+
+
+
+
+
+
+
+        key = pygame.key.get_pressed()
 
         # Place bombs
         if (key[const.KEYBOARD_CONTROLS[self.playerID][const.BOMB]] or
@@ -131,7 +175,7 @@ class Player(pygame.sprite.Sprite):
         # Input - movement (screen edges are not checked since there will always be a hard block)
         if self.moving == (0, 0):
             legalmove = True
-            left, right, up, down = layouts.get_hard_collisions(self.rect, const.STANDARD)
+            left, right, up, down = layouts.get_hard_collisions(self.rect, self.layout)
 
             # LEFT
             if (key[const.KEYBOARD_CONTROLS[self.playerID][const.LEFT]] or
@@ -233,6 +277,7 @@ class Player(pygame.sprite.Sprite):
         # Check collision with explosions
         for explosion in explosions:
             if self.rect.x == explosion.rect.x and self.rect.y == explosion.rect.y:
+                print("Player {0} lost!".format(self.playerID + 1))
                 self.kill()
                 return
 

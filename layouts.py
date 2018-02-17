@@ -4,23 +4,26 @@ import random
 
 
 def screen_edge(hards):
-    for i in range(const.ARENAWIDTH / const.TILESIZE):
+    for i in range(const.HOR_TILES):
             hards.add(entities.Hard(i * const.TILESIZE, 0))
             hards.add(entities.Hard(i * const.TILESIZE, const.ARENAHEIGHT - const.TILESIZE))
-    for i in range(const.ARENAHEIGHT / const.TILESIZE):
+    for i in range(const.VER_TILES):
         hards.add(entities.Hard(0, i * const.TILESIZE))
         hards.add(entities.Hard(const.ARENAWIDTH - const.TILESIZE, i * const.TILESIZE))
 
 
 def internal_layout(hards, layout):
     screen_edge(hards)
+
     if layout == const.STANDARD:
-        for i in range(2, const.ARENAWIDTH - 3 * const.TILESIZE, 2):
-                for j in range(2, const.ARENAHEIGHT - 3 * const.TILESIZE, 2):
+        max_x = (const.ARENAWIDTH - 3 * const.TILESIZE) / const.TILESIZE + 1
+        max_y = (const.ARENAHEIGHT - 3 * const.TILESIZE) / const.TILESIZE + 1
+        for i in range(2, max_x, 2):
+                for j in range(2, max_y, 2):
                     hards.add(entities.Hard(i * const.TILESIZE, j * const.TILESIZE))
 
 
-def get_hard_coord(rect):
+def get_tile_coord(rect):
     x = rect.x / const.TILESIZE
     y = rect.y / const.TILESIZE
     return x, y
@@ -28,7 +31,7 @@ def get_hard_coord(rect):
 
 def get_hard_collisions(rect, layout, bomb_range=1):
     """ returns the number of free hards in each direction, minus the bomb_range """
-    x, y = get_hard_coord(rect)
+    x, y = get_tile_coord(rect)
     left, right, up, down = 0, 0, 0, 0
 
     if layout == const.STANDARD:
