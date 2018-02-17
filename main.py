@@ -2,7 +2,7 @@
 # retry dirty sprites?
 # add list of "occupied" tiles for faster collision detection (softs. etc.)?
 # bots???
-# sound?
+# recheck hard blocks now that the bug has been fixed, possibly get rid of LAYOUT case - switches
 
 
 import pygame
@@ -19,12 +19,13 @@ import ai
 class Game:
     def __init__(self):
         pygame.init()
+        pygame.mixer.init()
 
         # Screen and background
         self.screen = pygame.display.set_mode((const.WINWIDTH, const.WINHEIGHT))
         self.screen.convert_alpha()
         pygame.display.set_caption("Bomberman!")
-        self.background = util.load_image(const.SPRITES_PATH[const.BACKGROUND_PATH])
+        self.background = util.load_image(const.RESOURCES[const.BACKGROUND_PATH])
         self.background_surf = pygame.Surface((const.ARENAWIDTH, const.ARENAHEIGHT))
         self.layout = const.STANDARD
 
@@ -49,6 +50,9 @@ class Game:
 
         # AI
         self.free_tiles = []
+
+        # Music
+        util.load_music(const.RESOURCES[const.BACKGROUND_MUSIC_PATH])
 
     def setup(self):
         # Clear everything
@@ -114,9 +118,9 @@ class Game:
 
 
 class Player(pygame.sprite.Sprite):
-    IMG = {const.PLAYER1: util.load_image(const.SPRITES_PATH[const.PLAYER1_PATH]),
-           const.PLAYER2: util.load_image(const.SPRITES_PATH[const.PLAYER2_PATH]),
-           const.PLAYER3: util.load_image(const.SPRITES_PATH[const.PLAYER3_PATH])}
+    IMG = {const.PLAYER1: util.load_image(const.RESOURCES[const.PLAYER1_PATH]),
+           const.PLAYER2: util.load_image(const.RESOURCES[const.PLAYER2_PATH]),
+           const.PLAYER3: util.load_image(const.RESOURCES[const.PLAYER3_PATH])}
 
     def __init__(self, x, y, playerID, controls, layout, *groups):
         super(Player, self).__init__(*groups)
@@ -151,7 +155,8 @@ class Player(pygame.sprite.Sprite):
         if self.controls == const.AI:
             threats = ai.get_threats(self.rect, bombs, free_tiles)
             if threats:
-                print(threats)
+                pass
+                # print("Danger!!!", threats)
 
 
 

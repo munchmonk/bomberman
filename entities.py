@@ -8,9 +8,9 @@ import util
 
 
 class Powerup(pygame.sprite.Sprite):
-    IMG = {const.EXTRABOMB: util.load_image(const.SPRITES_PATH[const.EXTRABOMB_PATH]),
-           const.EXTRASPEED: util.load_image(const.SPRITES_PATH[const.EXTRASPEED_PATH]),
-           const.EXTRARANGE: util.load_image(const.SPRITES_PATH[const.EXTRARANGE_PATH])}
+    IMG = {const.EXTRABOMB: util.load_image(const.RESOURCES[const.EXTRABOMB_PATH]),
+           const.EXTRASPEED: util.load_image(const.RESOURCES[const.EXTRASPEED_PATH]),
+           const.EXTRARANGE: util.load_image(const.RESOURCES[const.EXTRARANGE_PATH])}
 
     def __init__(self, x, y, *groups):
         super(Powerup, self).__init__(*groups)
@@ -23,7 +23,7 @@ class Powerup(pygame.sprite.Sprite):
 
 
 class Hard(pygame.sprite.Sprite):
-    IMG = util.load_image(const.SPRITES_PATH[const.HARD_PATH])
+    IMG = util.load_image(const.RESOURCES[const.HARD_PATH])
 
     def __init__(self, x, y, *groups):
         super(Hard, self).__init__(*groups)
@@ -35,7 +35,7 @@ class Hard(pygame.sprite.Sprite):
 
 
 class Soft(pygame.sprite.Sprite):
-    IMG = util.load_image(const.SPRITES_PATH[const.SOFT_PATH])
+    IMG = util.load_image(const.RESOURCES[const.SOFT_PATH])
 
     def __init__(self, x, y, *groups):
         super(Soft, self).__init__(*groups)
@@ -52,7 +52,8 @@ def spawn_powerup(soft, powerups):
 
 
 class Bomb(pygame.sprite.Sprite):
-    IMG = util.load_image(const.SPRITES_PATH[const.BOMB_PATH])
+    IMG = util.load_image(const.RESOURCES[const.BOMB_PATH])
+    DETONATION_SOUND = util.load_sound_effect(const.RESOURCES[const.DETONATION_SOUND_PATH])
 
     def __init__(self, x, y, bomb_range, *groups):
         super(Bomb, self).__init__(*groups)
@@ -137,12 +138,13 @@ class Bomb(pygame.sprite.Sprite):
                 if foundsoft:
                     break
 
+            Bomb.DETONATION_SOUND.play()
             self.kill()
             return
 
 
 class Explosion(pygame.sprite.Sprite):
-    IMG = util.load_image(const.SPRITES_PATH[const.EXPLOSION_PATH])
+    IMG = util.load_image(const.RESOURCES[const.EXPLOSION_PATH])
 
     def __init__(self, x, y, *groups):
         super(Explosion, self).__init__(*groups)

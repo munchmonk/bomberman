@@ -4,8 +4,8 @@ import pygame
 # Window structure
 FPS = 60
 TILESIZE = 40
-HOR_TILES = 9
-VER_TILES = 9
+HOR_TILES = 11
+VER_TILES = 11
 ARENAWIDTH = TILESIZE * HOR_TILES
 ARENAHEIGHT = TILESIZE * VER_TILES
 WINWIDTH = ARENAWIDTH
@@ -47,19 +47,23 @@ BASE_MAX_BOMBS = 1
 BASE_SPEED = 0.2
 SPEED_INCREASE = BASE_SPEED * 0.2
 
-# Sprite file path
+# Resources file path
 BOMB_PATH, EXPLOSION_PATH, HARD_PATH, SOFT_PATH, EXTRABOMB_PATH, EXTRARANGE_PATH, EXTRASPEED_PATH, \
-PLAYER1_PATH, PLAYER2_PATH, PLAYER3_PATH, PLAYER4_PATH, BACKGROUND_PATH = range(12)
-SPRITES_PATH = {BOMB_PATH:          "bomb.png",
-                EXPLOSION_PATH:     "explosion.png",
-                HARD_PATH:          "hard.png",
-                SOFT_PATH:          "soft.png",
-                EXTRABOMB_PATH:     "extrabomb.png",
-                EXTRARANGE_PATH:    "extrarange.png",
-                EXTRASPEED_PATH:    "extraspeed.png",
-                PLAYER1_PATH:       "player1.png",
-                PLAYER2_PATH:       "player2.png",
-                PLAYER3_PATH:       "player3.png",
-                PLAYER4_PATH:       "player4.png",
-                BACKGROUND_PATH:    "background.png"}
+PLAYER1_PATH, PLAYER2_PATH, PLAYER3_PATH, PLAYER4_PATH, BACKGROUND_PATH, BACKGROUND_MUSIC_PATH, \
+DETONATION_SOUND_PATH = range(14)
+
+RESOURCES    = {BOMB_PATH:              "bomb.png",
+                EXPLOSION_PATH:         "explosion.png",
+                HARD_PATH:              "hard.png",
+                SOFT_PATH:              "soft.png",
+                EXTRABOMB_PATH:         "extrabomb.png",
+                EXTRARANGE_PATH:        "extrarange.png",
+                EXTRASPEED_PATH:        "extraspeed.png",
+                PLAYER1_PATH:           "player1.png",
+                PLAYER2_PATH:           "player2.png",
+                PLAYER3_PATH:           "player3.png",
+                PLAYER4_PATH:           "player4.png",
+                BACKGROUND_PATH:        "background.png",
+                BACKGROUND_MUSIC_PATH:  "background_music.wav",
+                DETONATION_SOUND_PATH:  "bolt.wav"}
 
