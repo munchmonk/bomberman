@@ -1,11 +1,12 @@
 import pygame
 import time
 
-import main
+import const
 import layouts
 
+
 pygame.init()
-pygame.display.set_mode((main.WIDTH, main.HEIGHT))
+pygame.display.set_mode((const.WINWIDTH, const.WINHEIGHT))
 
 TILESIZE = 40
 
@@ -23,7 +24,7 @@ class Tile(pygame.sprite.Sprite):
 
 
 class Soft(pygame.sprite.Sprite):
-    IMG = pygame.image.load("soft.png").convert_alpha()
+    IMG = pygame.image.load("banana.png").convert_alpha()
 
     def __init__(self, x, y, *groups):
         super(Soft, self).__init__(*groups)
@@ -45,13 +46,12 @@ class Bomb(pygame.sprite.Sprite):
         self.spawned = time.time()
         self.bomb_range = bomb_range
 
-    def update(self, tiles, softs, explosions, dt):
+    def update(self, softs, explosions):
         if time.time() - self.spawned >= Bomb.LIFETIME:
             # Central explosion
             explosions.add(Explosion(self.rect.x, self.rect.y))
 
-
-            left, right, up, down = layouts.get_bomb_collisions(self.rect, self.bomb_range, 0)
+            left, right, up, down = layouts.get_tile_collisions(self.rect, const.LAYOUTS[const.STANDARD], self.bomb_range)
 
             # Collision - LEFT
             foundsoft = False
@@ -101,9 +101,6 @@ class Bomb(pygame.sprite.Sprite):
                 if foundsoft:
                     break
 
-
-
-
             self.kill()
             return
 
@@ -118,7 +115,7 @@ class Explosion(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=(x, y))
         self.spawned = time.time()
 
-    def update(self, dt):
+    def update(self):
         if time.time() - self.spawned >= Explosion.LIFETIME:
             self.kill()
             return
