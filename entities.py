@@ -46,11 +46,6 @@ class Soft(pygame.sprite.Sprite):
         pass
 
 
-def spawn_powerup(soft, powerups):
-    if random.random() >= 1 - const.POWERUPSPAWNCHANCE:
-        powerups.add(Powerup(soft.rect.x, soft.rect.y))
-
-
 class Bomb(pygame.sprite.Sprite):
     IMG = util.load_image(const.RESOURCES[const.BOMB_PATH])
     DETONATION_SOUND = util.load_sound_effect(const.RESOURCES[const.DETONATION_SOUND_PATH])
@@ -62,81 +57,21 @@ class Bomb(pygame.sprite.Sprite):
         self.spawned = time.time()
         self.bomb_range = bomb_range
 
-    def update(self, layout, softs, explosions, powerups, free_tiles):
+    def update(self, hards, softs, explosions, powerups, free_tiles):
         if time.time() - self.spawned >= const.BOMB_LIFETIME:
+
             # Central explosion
             explosions.add(Explosion(self.rect.x, self.rect.y))
-
-            left, right, up, down = layouts.get_hard_collisions(self.rect, layout, self.bomb_range)
-
-            # Collision - LEFT
-            foundsoft = False
+            left, right, up, down = layouts.get_bomb_explosions(self.rect, self.bomb_range, hards, softs, powerups,
+                                                                free_tiles)
             for i in range(1, left + 1):
                 explosions.add(Explosion(self.rect.x - const.TILESIZE * i, self.rect.y))
-                for powerup in powerups:
-                    if powerup.rect.left == self.rect.left - const.TILESIZE * i and powerup.rect.top == self.rect.top:
-                        powerups.remove(powerup)
-                for soft in softs:
-                    if soft.rect.left == self.rect.left - const.TILESIZE * i and soft.rect.top == self.rect.top:
-                        spawn_powerup(soft, powerups)
-                        free_tiles.append(layouts.get_tile_coord(soft.rect))
-                        softs.remove(soft)
-                        foundsoft = True
-                        break
-                if foundsoft:
-                    break
-
-            # Collision - RIGHT
-            foundsoft = False
             for i in range(1, right + 1):
                 explosions.add(Explosion(self.rect.x + const.TILESIZE * i, self.rect.y))
-                for powerup in powerups:
-                    if powerup.rect.right == self.rect.right + const.TILESIZE * i and powerup.rect.top == self.rect.top:
-                        powerups.remove(powerup)
-                for soft in softs:
-                    if soft.rect.right == self.rect.right + const.TILESIZE * i and soft.rect.top == self.rect.top:
-                        spawn_powerup(soft, powerups)
-                        free_tiles.append(layouts.get_tile_coord(soft.rect))
-                        softs.remove(soft)
-                        foundsoft = True
-                        break
-                if foundsoft:
-                    break
-
-            # Collision - UP
-            foundsoft = False
             for i in range(1, up + 1):
                 explosions.add(Explosion(self.rect.x, self.rect.y - const.TILESIZE * i))
-                for powerup in powerups:
-                    if powerup.rect.top == self.rect.top - const.TILESIZE * i and powerup.rect.left == self.rect.left:
-                        powerups.remove(powerup)
-                for soft in softs:
-                    if soft.rect.top == self.rect.top - const.TILESIZE * i and soft.rect.left == self.rect.left:
-                        spawn_powerup(soft, powerups)
-                        free_tiles.append(layouts.get_tile_coord(soft.rect))
-                        softs.remove(soft)
-                        foundsoft = True
-                        break
-                if foundsoft:
-                    break
-
-            # Collision - DOWN
-            foundsoft = False
             for i in range(1, down + 1):
                 explosions.add(Explosion(self.rect.x, self.rect.y + const.TILESIZE * i))
-                for powerup in powerups:
-                    if powerup.rect.bottom == self.rect.bottom + const.TILESIZE * i and \
-                    powerup.rect.left == self.rect.left:
-                        powerups.remove(powerup)
-                for soft in softs:
-                    if soft.rect.bottom == self.rect.bottom + const.TILESIZE * i and soft.rect.left == self.rect.left:
-                        spawn_powerup(soft, powerups)
-                        free_tiles.append(layouts.get_tile_coord(soft.rect))
-                        softs.remove(soft)
-                        foundsoft = True
-                        break
-                if foundsoft:
-                    break
 
             Bomb.DETONATION_SOUND.play()
             self.kill()

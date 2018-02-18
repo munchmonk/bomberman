@@ -1,2 +1,4 @@
-for i in range(2, 3):
-    print(i)
+a = True
+b = 3
+c = a + b
+print(c)

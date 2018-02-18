@@ -7,27 +7,6 @@ import layouts
 import entities
 
 
-def get_free_tiles(hards, softs):
-    ret = []
-
-    # Add all potentially free tiles
-    for i in range(1, const.HOR_TILES - 1):
-        for j in range(1, const.VER_TILES - 1):
-            ret.append((i, j))
-
-    # Remove the hard blocks
-    for hard in hards:
-        if layouts.get_tile_coord(hard.rect) in ret:
-            ret.remove(layouts.get_tile_coord(hard.rect))
-
-    # Remove the soft blocks
-    for soft in softs:
-        if layouts.get_tile_coord(soft.rect) in ret:
-            ret.remove(layouts.get_tile_coord(soft.rect))
-
-    return ret
-
-
 def _get_threats(rect, free_tiles, bombs):
     selfpos = layouts.get_tile_coord(rect)
     threats = [layouts.get_tile_coord(bomb.rect) for bomb in bombs]
@@ -111,20 +90,17 @@ def _get_random_move(rect, legal_tiles, safe):
         return 0, 0
     else:
         moves = [(c[0] - x, c[1] - y) for c in moves]
-    return _smoothen_move(moves, 0, 0, safe)
+    return _smoothen_move(moves, (0, 0), 0, safe)
 
 
 def _smoothen_move(moves, last_move, last_change, safe):
-    if last_move not in moves or len(moves) == 1:
-        return random.choice(moves)
-
-    # Tries to go straight the majority of times
-    if time.time() - last_change < const.MOVE_CHANGE_THRESHOLD and random.random() > const.MOVE_CHANGE_CHANCE:
+    # Tries to go straight the majority of the times
+    if last_move in moves and time.time() - last_change < const.MOVE_CHANGE_THRESHOLD and \
+    random.random() > const.MOVE_CHANGE_CHANCE:
         return last_move
-    # If he doesn't or can't, tries not to reverse
+    # If it doesn't or can't, tries not to reverse
     else:
-        moves.remove(last_move)
-        notreverse = [move for move in moves if move[0] * last_move[0] != -1 and move[1] * last_move[1] != -1]
+        notreverse = [move for move in moves if (move[0] * last_move[0] != -1) and (move[1] * last_move[1] != -1)]
         if notreverse:
             return random.choice(notreverse)
         # If he can't, it sometimes stops in place if safe to do so
