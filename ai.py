@@ -1,7 +1,10 @@
-import const
-import layouts
 import copy
 import random
+import time
+
+import const
+import layouts
+import entities
 
 
 def get_free_tiles(hards, softs):
@@ -60,59 +63,148 @@ def _get_threats(rect, free_tiles, bombs):
     return threats
 
 
-def _get_safe_tiles(rect, free_tiles, bombs):
+def _get_safe_tiles(rect, free_tiles, bombs, explosions):
     legal_tiles = _get_legal_tiles(rect, free_tiles, bombs)
 
     safe = []
     for tile in legal_tiles:
         rect = layouts.get_rect_from_coord(*tile)
+        exploding = False
+        for explosion in explosions:
+            if explosion.rect == rect:
+                exploding = True
         threats = _get_threats(rect, free_tiles, bombs)
-        if not threats:
+        if not threats and not exploding:
             safe.append(tile)
 
     return safe
 
 
+def get_place_bomb(rect, free_tiles, bombs, explosions):
+    return False
+    # hyp_bomb = entities.Bomb(rect.x, rect.y, 0)
+    # bombs.add(hyp_bomb)
+    # safe_tiles = _get_safe_tiles(rect, free_tiles, bombs, explosions)
+    # bombs.remove(hyp_bomb)
+
+    # if safe_tiles:
+    #     return True
+    # return False
 
 
+def _get_random_move(rect, legal_tiles, safe):
+    x, y = layouts.get_tile_coord(rect)
+    moves = []
 
+    if (x - 1, y) in legal_tiles:
+        moves.append((x - 1, y))
+    if (x + 1, y) in legal_tiles:
+        moves.append((x + 1, y))
+    if (x, y - 1) in legal_tiles:
+        moves.append((x, y - 1))
+    if (x, y + 1) in legal_tiles:
+        moves.append((x, y + 1))
 
-def get_desired_tile(rect, free_tiles, bombs):
-    safe_tiles = _get_safe_tiles(rect, free_tiles, bombs)
-
-    # Trapped, dead
-    if not safe_tiles:
+    if not moves:
         return 0, 0
-
-    # Safe, stay here
-    if layouts.get_tile_coord(rect) in safe_tiles:
-        return 0, 0
-
-    # In danger
     else:
-        x, y = layouts.get_tile_coord(rect)
-        closest = []
+        moves = [(c[0] - x, c[1] - y) for c in moves]
+    return _smoothen_move(moves, 0, 0, safe)
 
-        # Check if moving one tile is enough
-        if (x - 1, y) in safe_tiles:
-            closest.append((x - 1, y))
-        if (x + 1, y) in safe_tiles:
-            closest.append((x + 1, y))
-        if (x, y - 1) in safe_tiles:
-            closest.append((x, y - 1))
-        if (x, y + 1) in safe_tiles:
-            closest.append((x, y + 1))
 
-        if closest:
-            ret = random.choice(closest)
-            ret = (ret[0] - x, ret[1] - y)
-            return ret
+def _smoothen_move(moves, last_move, last_change, safe):
+    if last_move not in moves or len(moves) == 1:
+        return random.choice(moves)
 
-        # To be implemented...
+    # Tries to go straight the majority of times
+    if time.time() - last_change < const.MOVE_CHANGE_THRESHOLD and random.random() > const.MOVE_CHANGE_CHANCE:
+        return last_move
+    # If he doesn't or can't, tries not to reverse
+    else:
+        moves.remove(last_move)
+        notreverse = [move for move in moves if move[0] * last_move[0] != -1 and move[1] * last_move[1] != -1]
+        if notreverse:
+            return random.choice(notreverse)
+        # If he can't, it sometimes stops in place if safe to do so
+        if random.random() < const.STANDSTILL_CHANCE and safe:
+            return 0, 0
+        return random.choice(moves)
+
+
+def get_desired_tile(rect, free_tiles, bombs, explosions, last_move, last_dir_change, standstill):
+    legal_tiles = _get_legal_tiles(rect, free_tiles, bombs)
+    safe_tiles = _get_safe_tiles(rect, free_tiles, bombs, explosions)
+
+    x, y = layouts.get_tile_coord(rect)
+    safe = (x, y) in safe_tiles
+
+    # If he's standing still, keep doing it if safe to do so
+    if safe and time.time() - standstill < const.MAX_STANDSTILL_DURATION:
         return 0, 0
 
+    moves = []
 
+    # Trapped, dead everywhere - move at random
+    if not safe_tiles:
+        return _get_random_move(rect, legal_tiles, safe)
 
+    # Safe tiles exist - check for a move to an adjacent tile
+    # Left
+    if (x - 1, y) in safe_tiles:
+        moves.append((x - 1, y))
+    # Right
+    if (x + 1, y) in safe_tiles:
+        moves.append((x + 1, y))
+    # Up
+    if (x, y - 1) in safe_tiles:
+        moves.append((x, y - 1))
+    # Down
+    if (x, y + 1) in safe_tiles:
+        moves.append((x, y + 1))
+
+    # If there's no immediate safe tile but the current one is safe, don't move
+    if not moves and safe:
+        return 0, 0
+
+    # If there's an adjacent safe tile, go there
+    elif moves:
+        moves = [(c[0] - x, c[1] - y) for c in moves]
+        return _smoothen_move(moves, last_move, last_dir_change, safe)
+
+    # If current tile and adjacent ones are not safe, check the diagonal ones
+    # Top left
+    if (x - 1, y - 1) in safe_tiles:
+        if (x, y - 1) in legal_tiles:
+            moves.append((x, y - 1))
+        if (x - 1, y) in legal_tiles:
+            moves.append((x - 1, y))
+    # Top right
+    if (x + 1, y - 1) in safe_tiles:
+        if (x, y - 1) in legal_tiles:
+            moves.append((x, y - 1))
+        if (x + 1, y) in legal_tiles:
+            moves.append((x + 1, y))
+    # Bottom left
+    if (x - 1, y + 1) in safe_tiles:
+        if (x, y + 1) in legal_tiles:
+            moves.append((x, y + 1))
+        if (x - 1, y) in legal_tiles:
+            moves.append((x - 1, y))
+    # Bottom right
+    if (x + 1, y + 1) in safe_tiles:
+        if (x, y + 1) in legal_tiles:
+            moves.append((x, y + 1))
+        if (x + 1, y) in legal_tiles:
+            moves.append((x + 1, y))
+
+    # If there's a safe diagonal move, go towards it
+    if moves:
+        moves = [(c[0] - x, c[1] - y) for c in moves]
+        return _smoothen_move(moves, last_move, last_dir_change, safe)
+
+    # If non of the 9 tiles surrounding the bot are safe, move at random
+    # To be expanded in the future
+    return _get_random_move(rect, legal_tiles, safe)
 
 
 def _get_legal_tiles(rect, free_tiles, bombs):

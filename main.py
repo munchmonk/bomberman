@@ -1,11 +1,13 @@
 # TODO:
 # bots
 # recheck hard blocks now that the bug has been fixed, possibly get rid of LAYOUT case - switches
+# fix bug where you can walk through explosions
 
 
 import pygame
 import time
 import sys
+import random
 
 import entities
 import layouts
@@ -139,25 +141,13 @@ class Player(pygame.sprite.Sprite):
         self.max_bombs = const.BASE_MAX_BOMBS
         self.speed = const.BASE_SPEED
 
+        # AI
+        self.last_dir_change = 0
+        self.last_move = (0, 0)
+        self.standstill_start = 0
+
     def update(self, stick, softs, bombs, explosions, powerups, free_tiles, dt):
-        # Update number of active bombs
-        curr_time = time.time()
-        for bomb in self.active_bombs:
-            if curr_time - bomb >= const.BOMB_LIFETIME:
-                self.active_bombs.remove(bomb)
-
         key = pygame.key.get_pressed()
-
-        # Place bombs
-        if (key[const.KEYBOARD_CONTROLS[self.playerID][const.BOMB]] or
-        (stick and stick.get_button(const.JOYSTICK_CONTROLS[self.playerID][const.BOMB]))) and \
-        time.time() - self.lastbomb >= const.BOMB_COOLDOWN and \
-        len(self.active_bombs) < self.max_bombs:
-            bomb_x = self.rect.left - (const.TILESIZE - self.to_next_tile) * self.moving[0]
-            bomb_y = self.rect.top - (const.TILESIZE - self.to_next_tile) * self.moving[1]
-            bombs.add(entities.Bomb(bomb_x, bomb_y, self.bomb_range))
-            self.lastbomb = time.time()
-            self.active_bombs.append(time.time())
 
         # Input - movement (screen edges are not checked since there will always be a hard block)
         if self.moving == (0, 0):
@@ -234,9 +224,53 @@ class Player(pygame.sprite.Sprite):
                     self.to_next_tile = const.TILESIZE
 
         # AI
-        if self.controls == const.AI and self.moving == (0, 0):
-            self.moving = ai.get_desired_tile(self.rect, free_tiles, bombs)
-            self.to_next_tile = const.TILESIZE
+        bot_place_bomb = False
+        if self.controls == const.AI:
+            # Bombs
+            if time.time() - self.lastbomb >= const.BOMB_COOLDOWN and len(self.active_bombs) < self.max_bombs:
+                bot_place_bomb = ai.get_place_bomb(self.rect, free_tiles, bombs, explosions)
+
+            # Movement
+            # If bot is not in between tiles, get next move
+            if self.moving == (0, 0):
+                self.moving = ai.get_desired_tile(self.rect, free_tiles, bombs, explosions,
+                                                  self.last_move, self.last_dir_change, self.standstill_start)
+                # If it was moving and is now still, start a standstill of random duration
+                if self.moving == (0, 0) and self.moving != self.last_move:
+                    self.standstill_start = time.time() + random.random() * const.STANDSTILL_RANDOMIZER
+                # If it is moving update the state variable
+                elif self.moving != (0, 0):
+                    self.to_next_tile = const.TILESIZE
+
+                # If it changed direction, log it
+                if self.moving != self.last_move:
+                    self.last_dir_change = time.time()
+                    self.last_move = self.moving
+
+
+
+
+
+
+
+
+        # Update number of active bombs
+        curr_time = time.time()
+        for bomb in self.active_bombs:
+            if curr_time - bomb >= const.BOMB_LIFETIME:
+                self.active_bombs.remove(bomb)
+
+        # Place bombs
+        if (key[const.KEYBOARD_CONTROLS[self.playerID][const.BOMB]] or
+        (stick and stick.get_button(const.JOYSTICK_CONTROLS[self.playerID][const.BOMB])) or
+        bot_place_bomb) and \
+        time.time() - self.lastbomb >= const.BOMB_COOLDOWN and \
+        len(self.active_bombs) < self.max_bombs:
+            bomb_x = self.rect.left - (const.TILESIZE - self.to_next_tile) * self.moving[0]
+            bomb_y = self.rect.top - (const.TILESIZE - self.to_next_tile) * self.moving[1]
+            bombs.add(entities.Bomb(bomb_x, bomb_y, self.bomb_range))
+            self.lastbomb = time.time()
+            self.active_bombs.append(time.time())
 
         # Action - movement
         if self.moving != (0, 0):
