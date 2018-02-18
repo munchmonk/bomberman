@@ -1,3 +1,5 @@
+import pygame
+
 import const
 import entities
 import random
@@ -27,6 +29,11 @@ def get_tile_coord(rect):
     x = rect.x / const.TILESIZE
     y = rect.y / const.TILESIZE
     return x, y
+
+
+def get_rect_from_coord(x, y):
+    rect = pygame.Rect(x * const.TILESIZE, y * const.TILESIZE, const.TILESIZE, const.TILESIZE)
+    return rect
 
 
 def get_hard_collisions(rect, layout, bomb_range=1):

@@ -1,5 +1,7 @@
 import const
 import layouts
+import copy
+import random
 
 
 def get_free_tiles(hards, softs):
@@ -23,7 +25,7 @@ def get_free_tiles(hards, softs):
     return ret
 
 
-def get_threats(rect, bombs, free_tiles):
+def _get_threats(rect, free_tiles, bombs):
     selfpos = layouts.get_tile_coord(rect)
     threats = [layouts.get_tile_coord(bomb.rect) for bomb in bombs]
     threats = [threat for threat in threats if threat[0] == selfpos[0] or threat[1] == selfpos[1]]
@@ -56,3 +58,106 @@ def get_threats(rect, bombs, free_tiles):
                     break
     threats = [threat for threat in threats if threat not in safe]
     return threats
+
+
+def _get_safe_tiles(rect, free_tiles, bombs):
+    legal_tiles = _get_legal_tiles(rect, free_tiles, bombs)
+
+    safe = []
+    for tile in legal_tiles:
+        rect = layouts.get_rect_from_coord(*tile)
+        threats = _get_threats(rect, free_tiles, bombs)
+        if not threats:
+            safe.append(tile)
+
+    return safe
+
+
+
+
+
+
+def get_desired_tile(rect, free_tiles, bombs):
+    safe_tiles = _get_safe_tiles(rect, free_tiles, bombs)
+
+    # Trapped, dead
+    if not safe_tiles:
+        return 0, 0
+
+    # Safe, stay here
+    if layouts.get_tile_coord(rect) in safe_tiles:
+        return 0, 0
+
+    # In danger
+    else:
+        x, y = layouts.get_tile_coord(rect)
+        closest = []
+
+        # Check if moving one tile is enough
+        if (x - 1, y) in safe_tiles:
+            closest.append((x - 1, y))
+        if (x + 1, y) in safe_tiles:
+            closest.append((x + 1, y))
+        if (x, y - 1) in safe_tiles:
+            closest.append((x, y - 1))
+        if (x, y + 1) in safe_tiles:
+            closest.append((x, y + 1))
+
+        if closest:
+            ret = random.choice(closest)
+            ret = (ret[0] - x, ret[1] - y)
+            return ret
+
+        # To be implemented...
+        return 0, 0
+
+
+
+
+
+def _get_legal_tiles(rect, free_tiles, bombs):
+    nonbombed = _get_nonbombed_tiles(free_tiles, bombs)
+    reachable_tiles = _get_reachable_tiles(rect, nonbombed, [])
+    return reachable_tiles
+
+
+def _get_reachable_tiles(rect, nonbombed, ret):
+    x, y = layouts.get_tile_coord(rect)
+    ret.append((x, y))
+
+    # Look left
+    if (x - 1, y) in nonbombed and (x - 1, y) not in ret:
+        newrect = copy.copy(rect)
+        newrect.x -= const.TILESIZE
+        _get_reachable_tiles(newrect, nonbombed, ret)
+
+    # Look right
+    if (x + 1, y) in nonbombed and (x + 1, y) not in ret:
+        newrect = copy.copy(rect)
+        newrect.x += const.TILESIZE
+        _get_reachable_tiles(newrect, nonbombed, ret)
+
+    # Look up
+    if (x, y - 1) in nonbombed and (x, y - 1) not in ret:
+        newrect = copy.copy(rect)
+        newrect.y -= const.TILESIZE
+        _get_reachable_tiles(newrect, nonbombed, ret)
+
+    # Look down
+    if (x, y + 1) in nonbombed and (x, y + 1) not in ret:
+        newrect = copy.copy(rect)
+        newrect.y += const.TILESIZE
+        _get_reachable_tiles(newrect, nonbombed, ret)
+
+    return ret
+
+
+def _get_nonbombed_tiles(free_tiles, bombs):
+    ret = list(free_tiles)
+
+    # Remove bombs from reachable tiles
+    for bomb in bombs:
+        if layouts.get_tile_coord(bomb.rect) in ret:
+            ret.remove(layouts.get_tile_coord(bomb.rect))
+
+    return ret

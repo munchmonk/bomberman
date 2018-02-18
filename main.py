@@ -1,7 +1,5 @@
 # TODO:
-# retry dirty sprites?
-# add list of "occupied" tiles for faster collision detection (softs. etc.)?
-# bots???
+# bots
 # recheck hard blocks now that the bug has been fixed, possibly get rid of LAYOUT case - switches
 
 
@@ -148,22 +146,6 @@ class Player(pygame.sprite.Sprite):
             if curr_time - bomb >= const.BOMB_LIFETIME:
                 self.active_bombs.remove(bomb)
 
-
-
-
-        # AI
-        if self.controls == const.AI:
-            threats = ai.get_threats(self.rect, bombs, free_tiles)
-            if threats:
-                pass
-                # print("Danger!!!", threats)
-
-
-
-
-
-
-
         key = pygame.key.get_pressed()
 
         # Place bombs
@@ -250,6 +232,11 @@ class Player(pygame.sprite.Sprite):
                 if legalmove:
                     self.moving = (0, 1)
                     self.to_next_tile = const.TILESIZE
+
+        # AI
+        if self.controls == const.AI and self.moving == (0, 0):
+            self.moving = ai.get_desired_tile(self.rect, free_tiles, bombs)
+            self.to_next_tile = const.TILESIZE
 
         # Action - movement
         if self.moving != (0, 0):

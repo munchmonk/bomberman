@@ -4,8 +4,8 @@ import pygame
 # Window structure
 FPS = 60
 TILESIZE = 40
-HOR_TILES = 11
-VER_TILES = 11
+HOR_TILES = 7
+VER_TILES = 7
 ARENAWIDTH = TILESIZE * HOR_TILES
 ARENAHEIGHT = TILESIZE * VER_TILES
 WINWIDTH = ARENAWIDTH
@@ -65,5 +65,5 @@ RESOURCES    = {BOMB_PATH:              "bomb.png",
                 PLAYER4_PATH:           "player4.png",
                 BACKGROUND_PATH:        "background.png",
                 BACKGROUND_MUSIC_PATH:  "background_music.wav",
-                DETONATION_SOUND_PATH:  "bolt.wav"}
+                DETONATION_SOUND_PATH:  "bomb_detonation.wav"}
 
