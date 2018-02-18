@@ -84,9 +84,12 @@ class Game:
         self.allplayers.add(Player(const.PLAYERSPAWNLOCATION[const.PLAYER2][const.X],
                                    const.PLAYERSPAWNLOCATION[const.PLAYER2][const.Y],
                                    const.PLAYER2, const.AI, self.layout))
-        # self.allplayers.add(Player(const.PLAYERSPAWNLOCATION[const.PLAYER3][const.X],
-        #                            const.PLAYERSPAWNLOCATION[const.PLAYER3][const.Y],
-        #                            const.PLAYER3, const.HUMAN, self.layout))
+        self.allplayers.add(Player(const.PLAYERSPAWNLOCATION[const.PLAYER3][const.X],
+                                   const.PLAYERSPAWNLOCATION[const.PLAYER3][const.Y],
+                                   const.PLAYER3, const.AI, self.layout))
+        self.allplayers.add(Player(const.PLAYERSPAWNLOCATION[const.PLAYER4][const.X],
+                                   const.PLAYERSPAWNLOCATION[const.PLAYER4][const.Y],
+                                   const.PLAYER4, const.AI, self.layout))
 
     def play(self):
         self.setup()
@@ -114,13 +117,16 @@ class Game:
             pygame.display.flip()
 
             if len(self.allplayers) < 2:
+                for player in self.allplayers:
+                    print("PLAYER {} WON!!!\n".format(player.playerID + 1))
                 self.setup()
 
 
 class Player(pygame.sprite.Sprite):
     IMG = {const.PLAYER1: util.load_image(const.RESOURCES[const.PLAYER1_PATH]),
            const.PLAYER2: util.load_image(const.RESOURCES[const.PLAYER2_PATH]),
-           const.PLAYER3: util.load_image(const.RESOURCES[const.PLAYER3_PATH])}
+           const.PLAYER3: util.load_image(const.RESOURCES[const.PLAYER3_PATH]),
+           const.PLAYER4: util.load_image(const.RESOURCES[const.PLAYER4_PATH])}
 
     def __init__(self, x, y, playerID, controls, layout, *groups):
         super(Player, self).__init__(*groups)
@@ -147,6 +153,36 @@ class Player(pygame.sprite.Sprite):
         self.standstill_start = 0
 
     def update(self, stick, softs, bombs, explosions, powerups, free_tiles, dt):
+
+        # Update
+        # Check collisions with explosions
+        prev_tile_x = self.rect.x - self.moving[0] * (const.TILESIZE - self.to_next_tile)
+        prev_tile_y = self.rect.y - self.moving[1] * (const.TILESIZE - self.to_next_tile)
+
+        for explosion in explosions:
+            if prev_tile_x == explosion.rect.x and prev_tile_y == explosion.rect.y:
+                print("Player {0} lost!".format(self.playerID + 1))
+                self.kill()
+                return
+
+        # Check collisions with powerups
+        for powerup in powerups:
+            if prev_tile_x == powerup.rect.x and prev_tile_y == powerup.rect.y:
+                if powerup.type == const.EXTRABOMB:
+                    self.max_bombs += 1
+                elif powerup.type == const.EXTRASPEED:
+                    self.speed += const.SPEED_INCREASE
+                elif powerup.type == const.EXTRARANGE:
+                    self.bomb_range += 1
+                powerups.remove(powerup)
+
+        # Update number of active bombs
+        curr_time = time.time()
+        for bomb in self.active_bombs:
+            if curr_time - bomb >= const.BOMB_LIFETIME:
+                self.active_bombs.remove(bomb)
+
+        # Input
         key = pygame.key.get_pressed()
 
         # Input - movement (screen edges are not checked since there will always be a hard block)
@@ -223,17 +259,23 @@ class Player(pygame.sprite.Sprite):
                     self.moving = (0, 1)
                     self.to_next_tile = const.TILESIZE
 
+
+
+
+
+
         # AI
         bot_place_bomb = False
         if self.controls == const.AI:
             # Bombs
-            if time.time() - self.lastbomb >= const.BOMB_COOLDOWN and len(self.active_bombs) < self.max_bombs:
+            if self.moving == (0, 0) and \
+            time.time() - self.lastbomb >= const.BOMB_COOLDOWN and len(self.active_bombs) < self.max_bombs:
                 bot_place_bomb = ai.get_place_bomb(self.rect, free_tiles, bombs, explosions)
 
             # Movement
-            # If bot is not in between tiles, get next move
-            if self.moving == (0, 0):
-                self.moving = ai.get_desired_tile(self.rect, free_tiles, bombs, explosions,
+            # If bot is not in between tiles or placing a bomb, get next move
+            if self.moving == (0, 0) and not bot_place_bomb:
+                self.moving = ai.get_move(self.rect, free_tiles, bombs, explosions,
                                                   self.last_move, self.last_dir_change, self.standstill_start)
                 # If it was moving and is now still, start a standstill of random duration
                 if self.moving == (0, 0) and self.moving != self.last_move:
@@ -251,15 +293,7 @@ class Player(pygame.sprite.Sprite):
 
 
 
-
-
-
-        # Update number of active bombs
-        curr_time = time.time()
-        for bomb in self.active_bombs:
-            if curr_time - bomb >= const.BOMB_LIFETIME:
-                self.active_bombs.remove(bomb)
-
+        # Action
         # Place bombs
         if (key[const.KEYBOARD_CONTROLS[self.playerID][const.BOMB]] or
         (stick and stick.get_button(const.JOYSTICK_CONTROLS[self.playerID][const.BOMB])) or
@@ -272,7 +306,7 @@ class Player(pygame.sprite.Sprite):
             self.lastbomb = time.time()
             self.active_bombs.append(time.time())
 
-        # Action - movement
+        # Movement
         if self.moving != (0, 0):
             dx = round(self.moving[0] * self.speed * dt)
             dy = round(self.moving[1] * self.speed * dt)
@@ -288,24 +322,6 @@ class Player(pygame.sprite.Sprite):
                 self.rect.y += self.to_next_tile * self.moving[1]
                 self.moving = (0, 0)
                 self.to_next_tile = 0
-
-        # Check collision with powerups
-        for powerup in powerups:
-            if self.rect.x == powerup.rect.x and self.rect.y == powerup.rect.y:
-                if powerup.type == const.EXTRABOMB:
-                    self.max_bombs += 1
-                elif powerup.type == const.EXTRASPEED:
-                    self.speed += const.SPEED_INCREASE
-                elif powerup.type == const.EXTRARANGE:
-                    self.bomb_range += 1
-                powerups.remove(powerup)
-
-        # Check collision with explosions
-        for explosion in explosions:
-            if self.rect.x == explosion.rect.x and self.rect.y == explosion.rect.y:
-                print("Player {0} lost!".format(self.playerID + 1))
-                self.kill()
-                return
 
 
 if __name__ == "__main__":

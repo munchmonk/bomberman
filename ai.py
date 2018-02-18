@@ -81,15 +81,17 @@ def _get_safe_tiles(rect, free_tiles, bombs, explosions):
 
 
 def get_place_bomb(rect, free_tiles, bombs, explosions):
-    return False
-    # hyp_bomb = entities.Bomb(rect.x, rect.y, 0)
-    # bombs.add(hyp_bomb)
-    # safe_tiles = _get_safe_tiles(rect, free_tiles, bombs, explosions)
-    # bombs.remove(hyp_bomb)
+    if random.random() > const.BOMB_PLACEMENT_CHANCE:
+        return False
 
-    # if safe_tiles:
-    #     return True
-    # return False
+    hyp_bomb = entities.Bomb(rect.x, rect.y, 0)
+    bombs.add(hyp_bomb)
+    safe_tiles = _get_safe_tiles(rect, free_tiles, bombs, explosions)
+    bombs.remove(hyp_bomb)
+
+    if safe_tiles:
+        return True
+    return False
 
 
 def _get_random_move(rect, legal_tiles, safe):
@@ -131,7 +133,7 @@ def _smoothen_move(moves, last_move, last_change, safe):
         return random.choice(moves)
 
 
-def get_desired_tile(rect, free_tiles, bombs, explosions, last_move, last_dir_change, standstill):
+def get_move(rect, free_tiles, bombs, explosions, last_move, last_dir_change, standstill):
     legal_tiles = _get_legal_tiles(rect, free_tiles, bombs)
     safe_tiles = _get_safe_tiles(rect, free_tiles, bombs, explosions)
 
@@ -202,8 +204,25 @@ def get_desired_tile(rect, free_tiles, bombs, explosions, last_move, last_dir_ch
         moves = [(c[0] - x, c[1] - y) for c in moves]
         return _smoothen_move(moves, last_move, last_dir_change, safe)
 
-    # If non of the 9 tiles surrounding the bot are safe, move at random
-    # To be expanded in the future
+    # If none of the 9 tiles surrounding the bot are safe, try to move to a side that has 2 free tiles in a row
+    # Left
+    if (x - 1, y) in legal_tiles and (x - 2, y) in legal_tiles:
+        moves.append((x - 1, y))
+    # Right
+    if (x + 1, y) in legal_tiles and (x + 2, y) in legal_tiles:
+        moves.append((x + 1, y))
+    # Up
+    if (x, y - 1) in legal_tiles and (x, y - 1) in legal_tiles:
+        moves.append((x, y - 1))
+    # Down
+    if (x, y + 1) in legal_tiles and (x, y + 1) in legal_tiles:
+        moves.append((x, y + 1))
+
+    if moves:
+        moves = [(c[0] - x, c[1] - y) for c in moves]
+        return _smoothen_move(moves, last_move, last_dir_change, safe)
+
+    # If that fails, move at random
     return _get_random_move(rect, legal_tiles, safe)
 
 
