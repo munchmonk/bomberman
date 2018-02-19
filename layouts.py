@@ -197,6 +197,10 @@ def _get_free_adj(rect, obstacles):
     return left, right, up, down
 
 
+def get_heuristic_distance(tile1, tile2):
+    return abs(tile1[0] - tile2[0]) + abs(tile1[1] - tile2[1])
+
+
 def fill_with_softs(hards, softs, layout):
     occupied = []
     always_empty = []
@@ -220,7 +224,7 @@ def fill_with_softs(hards, softs, layout):
         always_empty = ((p1_x, p1_y), (p1_x + 1, p1_y), (p1_x, p1_y + 1),
                         (p2_x, p2_y), (p2_x - 1, p2_y), (p2_x, p2_y - 1),
                         (p3_x, p3_y), (p3_x + 1, p3_y), (p3_x, p3_y - 1),
-                        (p4_x, p4_y), (p4_x - 1, p4_y), (p4_x, p4_y - 1))
+                        (p4_x, p4_y), (p4_x - 1, p4_y), (p4_x, p4_y + 1))
 
     if layout == const.CENTERCROSS:
         always_empty = ((p1_x, p1_y), (p1_x - 1, p1_y), (p1_x, p1_y - 1),

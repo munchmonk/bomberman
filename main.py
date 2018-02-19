@@ -1,12 +1,16 @@
 # TODO:
 # clean up and rearrange "private" methods in modules, add _ before their names
-# some sort of timer?
-# graphics / animation
+# some sort of timer for neverending rounds?
+# graphics / animation?
+# fix human / ai control clusterfuck with the joysticks
+# comment the code!!
+# refactor and clean up AI, it's a mess of redundant / similar methods
 
 
 import pygame
 import sys
 import random
+import time
 
 
 import layouts
@@ -30,6 +34,9 @@ class Game:
 
         # Time
         self.clock = pygame.time.Clock()
+        self.paused = False
+        self.pause_start = 0
+        self.gameover = False
 
         # Sprite groups
         self.allhards = pygame.sprite.Group()
@@ -81,10 +88,15 @@ class Game:
         self.free_tiles = layouts.get_free_tiles(self.allhards, self.allsofts)
 
         # Create players
-        self.allplayers.add(player.Player(const.PLAYER1, const.HUMAN, self.layout))
-        self.allplayers.add(player.Player(const.PLAYER2, const.HUMAN, self.layout))
-        self.allplayers.add(player.Player(const.PLAYER3, const.HUMAN, self.layout))
-        self.allplayers.add(player.Player(const.PLAYER4, const.HUMAN, self.layout))
+        self.allplayers.add(player.Player(const.PLAYER1, const.AI, self.layout))
+        self.allplayers.add(player.Player(const.PLAYER2, const.AI, self.layout))
+        self.allplayers.add(player.Player(const.PLAYER3, const.AI, self.layout))
+        self.allplayers.add(player.Player(const.PLAYER4, const.AI, self.layout))
+
+        # Pause before starting
+        self.gameover = False
+        self.paused = False  # True
+        self.pause_start = time.time()
 
     def play(self):
         self.setup()
@@ -96,10 +108,12 @@ class Game:
                     sys.exit()
 
             # Update sprites
-            self.allplayers.update(self.stick, self.allhards, self.allsofts, self.allbombs, self.allexplosions,
-                                   self.allpowerups, self.free_tiles, dt)
-            self.allbombs.update(self.allhards, self.allsofts, self.allexplosions, self.allpowerups, self.free_tiles)
-            self.allexplosions.update()
+            if not self.paused:
+                self.allplayers.update(self.stick, self.allhards, self.allsofts, self.allbombs, self.allexplosions,
+                                       self.allpowerups, self.free_tiles, dt)
+                self.allbombs.update(self.allhards, self.allsofts, self.allexplosions, self.allpowerups,
+                                     self.free_tiles)
+                self.allexplosions.update()
 
             # Draw sprites
             self.screen.blit(self.background_surf, (0, 0))
@@ -111,9 +125,23 @@ class Game:
 
             pygame.display.flip()
 
-            if len(self.allplayers) < 2:
-                for player in self.allplayers:
-                    print("PLAYER {} WON!!!\n".format(player.playerID + 1))
+            # Check if it has to unpause
+            if self.paused and time.time() - self.pause_start > const.PAUSEDURATION:
+                self.paused = False
+
+            # Game over
+            if not self.gameover and len(self.allplayers) < 2:
+                if len(self.allplayers) == 0:
+                    print("IT'S A DRAW!!!")
+                else:
+                    for p in self.allplayers:
+                        print("PLAYER {} WON!!!!\n".format(p.playerID + 1))
+                self.paused = True
+                self.pause_start = time.time()
+                self.gameover = True
+
+            # Restart the game
+            if self.gameover and time.time() - self.pause_start > const.PAUSEDURATION:
                 self.setup()
 
 

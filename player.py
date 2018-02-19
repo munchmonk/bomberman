@@ -19,10 +19,9 @@ class Player(pygame.sprite.Sprite):
         super(Player, self).__init__(*groups)
         self.playerID = playerID
         self.controls = controls
-        self.layout = layout
         self.image = Player.IMG[self.playerID]
-        x = const.PLAYERSPAWNLOCATION[self.layout][self.playerID][const.X]
-        y = const.PLAYERSPAWNLOCATION[self.layout][self.playerID][const.Y]
+        x = const.PLAYERSPAWNLOCATION[layout][self.playerID][const.X]
+        y = const.PLAYERSPAWNLOCATION[layout][self.playerID][const.Y]
         self.rect = self.image.get_rect(topleft=(x, y))
 
         # State variables
